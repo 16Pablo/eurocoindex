@@ -1,0 +1,49 @@
+name: eurocoindex
+description: EuroCoinDex - Álbum digital de monedas de euro
+version: 1.0.0+1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.1.1
+
+  # Database local
+  sqflite: ^2.3.0
+  path: ^1.9.0
+
+  # Red
+  http: ^1.1.0
+
+  # Imágenes con caché
+  cached_network_image: ^3.3.1
+
+  # CSV parsing
+  csv: ^6.0.0
+
+  # Archivos y rutas
+  path_provider: ^2.1.1
+  file_picker: ^8.0.0+1
+  share_plus: ^9.0.0
+
+  # Preferencias y utilidades
+  shared_preferences: ^2.2.2
+  package_info_plus: ^8.0.0
+  url_launcher: ^6.2.1
+
+  # UI extras
+  photo_view: ^0.15.0
+  shimmer: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
