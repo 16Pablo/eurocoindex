@@ -48,10 +48,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         children: [
-          // ── Estadísticas de la colección ──────────────────────────────
           _SectionHeader('Mi colección'),
           Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            margin:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -59,11 +59,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _StatItem('Obtenidas', '$collected', colorScheme.primary),
                       _StatItem(
-                          'Faltantes', '${totalCoins - collected}', Colors.grey),
-                      _StatItem(
-                          'Total catálogo', '$totalCoins', colorScheme.secondary),
+                          'Obtenidas', '$collected', colorScheme.primary),
+                      _StatItem('Faltantes',
+                          '${totalCoins - collected}', Colors.grey),
+                      _StatItem('Total catálogo', '$totalCoins',
+                          colorScheme.secondary),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -85,19 +86,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     totalCoins > 0
                         ? '${(collected / totalCoins * 100).toStringAsFixed(1)}% completado'
                         : '',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style:
+                        const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
             ),
           ),
 
-          // ── Copia de seguridad ────────────────────────────────────────
           _SectionHeader('Copia de seguridad'),
           ListTile(
             leading: const Icon(Icons.upload),
             title: const Text('Exportar colección'),
-            subtitle: const Text('Guarda un archivo CSV con tus monedas'),
+            subtitle:
+                const Text('Guarda un archivo CSV con tus monedas'),
             onTap: () => _exportCollection(context),
           ),
           const Divider(indent: 56),
@@ -109,7 +111,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => _importCollection(context),
           ),
 
-          // ── Base de datos ─────────────────────────────────────────────
           _SectionHeader('Base de datos'),
           ListTile(
             leading: const Icon(Icons.sync),
@@ -121,7 +122,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => _refreshData(context),
           ),
 
-          // ── Acerca de ─────────────────────────────────────────────────
           _SectionHeader('Acerca de'),
           ListTile(
             leading: const Icon(Icons.info_outline),
@@ -130,9 +130,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(indent: 56),
           ListTile(
-            leading: const Icon(Icons.favorite, color: Colors.red),
+            leading:
+                const Icon(Icons.favorite, color: Colors.red),
             title: const Text('Apoya el proyecto'),
-            subtitle: const Text('Si te es útil, considera una donación'),
+            subtitle:
+                const Text('Si te es útil, considera una donación'),
             onTap: () => launchUrl(
               Uri.parse('https://www.paypal.com/donate'),
               mode: LaunchMode.externalApplication,
@@ -160,12 +162,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final provider = context.read<AppProvider>();
       final file = await provider.exportCollection();
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: 'Mi colección EuroCoinDex',
-          subject: 'EuroCoinDex - Copia de seguridad',
-        ),
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Mi colección EuroCoinDex',
+        subject: 'EuroCoinDex - Copia de seguridad',
       );
     } catch (e) {
       _showSnack(context, 'Error al exportar: $e', isError: true);
@@ -173,7 +173,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _importCollection(BuildContext context) async {
-    // Confirmar antes de sobreescribir
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -227,16 +226,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ── Widgets auxiliares ─────────────────────────────────────────────────────
-
 class _SectionHeader extends StatelessWidget {
   final String text;
   const _SectionHeader(this.text);
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding:
-            const EdgeInsets.fromLTRB(16, 20, 16, 4),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
         child: Text(
           text.toUpperCase(),
           style: TextStyle(
@@ -266,8 +262,8 @@ class _StatItem extends StatelessWidget {
                 color: color),
           ),
           Text(label,
-              style:
-                  const TextStyle(fontSize: 11, color: Colors.grey)),
+              style: const TextStyle(
+                  fontSize: 11, color: Colors.grey)),
         ],
       );
 }
