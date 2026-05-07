@@ -14,20 +14,18 @@ class AppProvider extends ChangeNotifier {
   final CoinsService _coinsService = CoinsService();
   final CollectionService _collectionService = CollectionService();
 
-  // ── Estado ───────────────────────────────────────────────────────────────
   LoadingState _state = LoadingState.idle;
   String _errorMessage = '';
   List<Coin> _allCoins = [];
   Set<int> _collectedIds = {};
 
-  // ── Getters ──────────────────────────────────────────────────────────────
   LoadingState get state => _state;
   String get errorMessage => _errorMessage;
   List<Coin> get allCoins => _allCoins;
   Set<int> get collectedIds => _collectedIds;
   bool get isLoaded => _state == LoadingState.loaded;
 
-  // ── Datos filtrados ──────────────────────────────────────────────────────
+  // ── Listas filtradas ──────────────────────────────────────────────────────
 
   List<Coin> get normalCoins =>
       _allCoins.where((c) => !c.conm && c.emitida).toList();
@@ -41,52 +39,51 @@ class AppProvider extends ChangeNotifier {
   List<Coin> get jointCommCoins =>
       _allCoins.where((c) => c.conm && c.conj && c.emitida).toList();
 
-  /// Países únicos de monedas normales (ordenados)
-  List<Map<String, String>> get normalCountries {
+  // ── Países ────────────────────────────────────────────────────────────────
+
+  List<Map<String, String>> get normalCountries =>
+      _uniqueCountries(normalCoins);
+
+  List<Map<String, String>> get commCountries =>
+      _uniqueCountries(nationalCommCoins);
+
+  List<Map<String, String>> get jointCountries =>
+      _uniqueCountries(jointCommCoins);
+
+  List<Map<String, String>> _uniqueCountries(List<Coin> coins) {
     final seen = <String>{};
     final result = <Map<String, String>>[];
-    for (final c in normalCoins) {
+    for (final c in coins) {
       if (seen.add(c.idPais)) {
-        result.add({'idPais': c.idPais, 'paisES': c.paisES, 'flag': c.flag});
+        result.add(
+            {'idPais': c.idPais, 'paisES': c.paisES, 'flag': c.flag});
       }
     }
     result.sort((a, b) => a['paisES']!.compareTo(b['paisES']!));
     return result;
   }
 
-  /// Países únicos de conmemorativas nacionales (ordenados)
-  List<Map<String, String>> get commCountries {
-    final seen = <String>{};
-    final result = <Map<String, String>>[];
-    for (final c in nationalCommCoins) {
-      if (seen.add(c.idPais)) {
-        result.add({'idPais': c.idPais, 'paisES': c.paisES, 'flag': c.flag});
-      }
-    }
-    result.sort((a, b) => a['paisES']!.compareTo(b['paisES']!));
-    return result;
-  }
+  // ── Años de conmemorativas nacionales ─────────────────────────────────────
 
-  /// Años únicos de conmemorativas (ordenados)
   List<int> get commYears {
     final years = <int>{};
     for (final c in nationalCommCoins) {
-      // Para conmemorativas, se usa anoinicio (año exacto de emisión)
       years.add(c.anoInicio);
     }
     return years.toList()..sort();
   }
 
-  /// Series conjuntas únicas
+  // ── Series conjuntas (por IDserie + descr_serieES) ────────────────────────
+
   List<Map<String, String?>> get jointSeries {
     final seen = <String>{};
     final result = <Map<String, String?>>[];
     for (final c in jointCommCoins) {
-      final key = c.conjOficial ?? c.idSerie ?? '';
+      final key = c.idSerie ?? '';
       if (key.isNotEmpty && seen.add(key)) {
         result.add({
           'id': key,
-          'titulo': c.titulo,
+          'titulo': c.descrSerieES,
           'image': c.imageCoin,
         });
       }
@@ -96,42 +93,25 @@ class AppProvider extends ChangeNotifier {
 
   // ── Filtros de monedas ────────────────────────────────────────────────────
 
-  /// Monedas normales de un país, agrupadas por serie
-  Map<String, List<Coin>> normalCoinsByCountry(String idPais) {
-    final coins =
-        normalCoins.where((c) => c.idPais == idPais).toList();
-    final Map<String, List<Coin>> grouped = {};
-    for (final c in coins) {
-      final key = c.descrSerieES ?? 'Sin serie';
-      grouped.putIfAbsent(key, () => []).add(c);
-    }
-    return grouped;
-  }
+  Map<String, List<Coin>> normalCoinsByCountry(String idPais) =>
+      _groupBySerie(normalCoins.where((c) => c.idPais == idPais).toList());
 
-  /// Monedas normales de un valor, todas las de todos los países
   List<Coin> normalCoinsByValue(int valor) {
     return normalCoins.where((c) => c.valor == valor).toList()
       ..sort((a, b) {
         final pc = a.paisES.compareTo(b.paisES);
-        if (pc != 0) return pc;
-        return a.anoInicio.compareTo(b.anoInicio);
+        return pc != 0 ? pc : a.anoInicio.compareTo(b.anoInicio);
       });
   }
 
-  /// Conmemorativas nacionales de un país, agrupadas por serie
   Map<String, List<Coin>> commCoinsByCountry(String idPais) {
-    final coins =
-        nationalCommCoins.where((c) => c.idPais == idPais).toList()
-          ..sort((a, b) => a.anoInicio.compareTo(b.anoInicio));
-    final Map<String, List<Coin>> grouped = {};
-    for (final c in coins) {
-      final key = c.descrSerieES ?? 'Sin serie';
-      grouped.putIfAbsent(key, () => []).add(c);
-    }
-    return grouped;
+    final coins = nationalCommCoins
+        .where((c) => c.idPais == idPais)
+        .toList()
+      ..sort((a, b) => a.anoInicio.compareTo(b.anoInicio));
+    return _groupBySerie(coins);
   }
 
-  /// Conmemorativas nacionales de un año
   List<Coin> commCoinsByYear(int year) {
     return nationalCommCoins
         .where((c) => c.anoInicio == year)
@@ -139,22 +119,32 @@ class AppProvider extends ChangeNotifier {
       ..sort((a, b) => a.paisES.compareTo(b.paisES));
   }
 
-  /// Conmemorativas conjuntas de una serie
-  List<Coin> jointCoinsBySeries(String seriesId) {
+  List<Coin> jointCoinsByCountry(String idPais) {
     return jointCommCoins
-        .where((c) =>
-            (c.conjOficial ?? c.idSerie ?? '') == seriesId)
+        .where((c) => c.idPais == idPais)
+        .toList()
+      ..sort((a, b) => a.anoInicio.compareTo(b.anoInicio));
+  }
+
+  List<Coin> jointCoinsBySeries(String idSerie) {
+    return jointCommCoins
+        .where((c) => (c.idSerie ?? '') == idSerie)
         .toList()
       ..sort((a, b) => a.paisES.compareTo(b.paisES));
   }
 
-  /// Búsqueda avanzada
-  List<Coin> search({
-    int? valor,
-    String? idPais,
-    int? year,
-    String? tag,
-  }) {
+  Map<String, List<Coin>> _groupBySerie(List<Coin> coins) {
+    final Map<String, List<Coin>> grouped = {};
+    for (final c in coins) {
+      final key = c.descrSerieES ?? 'Sin serie';
+      grouped.putIfAbsent(key, () => []).add(c);
+    }
+    return grouped;
+  }
+
+  // ── Búsqueda ──────────────────────────────────────────────────────────────
+
+  List<Coin> search({int? valor, String? idPais, int? year, String? tag}) {
     return _allCoins.where((c) {
       if (!c.emitida) return false;
       if (valor != null && c.valor != valor) return false;
@@ -165,12 +155,10 @@ class AppProvider extends ChangeNotifier {
     }).toList()
       ..sort((a, b) {
         final pc = a.paisES.compareTo(b.paisES);
-        if (pc != 0) return pc;
-        return a.anoInicio.compareTo(b.anoInicio);
+        return pc != 0 ? pc : a.anoInicio.compareTo(b.anoInicio);
       });
   }
 
-  /// Tags únicos disponibles (ordenados)
   List<String> get allTags {
     final tags = <String>{};
     for (final c in _allCoins) {
@@ -179,7 +167,7 @@ class AppProvider extends ChangeNotifier {
     return tags.toList()..sort();
   }
 
-  // ── Colección ────────────────────────────────────────────────────────────
+  // ── Colección ─────────────────────────────────────────────────────────────
 
   bool isCollected(int coinId) => _collectedIds.contains(coinId);
 
@@ -189,12 +177,12 @@ class AppProvider extends ChangeNotifier {
     if (wasAdded) {
       _collectedIds = {..._collectedIds, coinId};
     } else {
-      _collectedIds = _collectedIds.where((id) => id != coinId).toSet();
+      _collectedIds =
+          _collectedIds.where((id) => id != coinId).toSet();
     }
     notifyListeners();
   }
 
-  /// Filtra una lista de monedas según el filtro de colección
   List<Coin> applyFilter(List<Coin> coins, CollectionFilter filter) {
     switch (filter) {
       case CollectionFilter.all:
@@ -209,7 +197,7 @@ class AppProvider extends ChangeNotifier {
   int countCollected(List<Coin> coins) =>
       coins.where((c) => _collectedIds.contains(c.id)).length;
 
-  // ── Carga de datos ───────────────────────────────────────────────────────
+  // ── Carga ─────────────────────────────────────────────────────────────────
 
   Future<void> loadData() async {
     if (_state == LoadingState.loading) return;
@@ -232,7 +220,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Exportar / Importar colección ────────────────────────────────────────
+  // ── Exportar / Importar ───────────────────────────────────────────────────
 
   Future<File> exportCollection() => _collectionService.exportCollection();
 

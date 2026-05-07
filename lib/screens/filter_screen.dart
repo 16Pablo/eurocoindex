@@ -7,21 +7,19 @@ import '../widgets/coin_image.dart';
 import '../widgets/grid_item.dart';
 import 'coin_list_screen.dart';
 
-/// Pantalla de filtros: muestra una cuadrícula para navegar por país, valor, año o serie
 class FilterScreen extends StatefulWidget {
-  final bool isComm; // true = conmemorativas, false = normales
-
+  final bool isComm;
   const FilterScreen({super.key, required this.isComm});
 
   @override
   State<FilterScreen> createState() => _FilterScreenState();
 }
 
-enum _FilterMode { country, value, year, joint }
+enum _FilterMode { country, value, year, jointCountry, jointSeries }
 
 class _FilterScreenState extends State<FilterScreen> {
   _FilterMode _mode = _FilterMode.country;
-  bool _isNational = true; // solo para conmemorativas
+  bool _isNational = true;
 
   @override
   Widget build(BuildContext context) {
@@ -29,41 +27,67 @@ class _FilterScreenState extends State<FilterScreen> {
       appBar: AppBar(
         title: Text(widget.isComm ? 'Conmemorativas' : 'Normales'),
         actions: [
-          PopupMenuButton<_FilterMode>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            tooltip: 'Modo de visualización',
-            onSelected: (mode) => setState(() => _mode = mode),
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: _FilterMode.country,
-                child: Row(children: [
-                  Icon(Icons.flag_outlined),
-                  SizedBox(width: 8),
-                  Text('Por país'),
-                ]),
-              ),
-              if (!widget.isComm || _isNational)
+          // Menú solo para secciones que lo necesitan
+          if (!widget.isComm || (_isNational))
+            PopupMenuButton<_FilterMode>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              tooltip: 'Modo de visualización',
+              onSelected: (mode) => setState(() => _mode = mode),
+              itemBuilder: (_) => [
                 const PopupMenuItem(
-                  value: _FilterMode.value,
+                  value: _FilterMode.country,
                   child: Row(children: [
-                    Icon(Icons.monetization_on_outlined),
+                    Icon(Icons.flag_outlined),
                     SizedBox(width: 8),
-                    Text('Por valor'),
+                    Text('Por país'),
                   ]),
                 ),
-              if (widget.isComm && _isNational)
+                if (!widget.isComm)
+                  const PopupMenuItem(
+                    value: _FilterMode.value,
+                    child: Row(children: [
+                      Icon(Icons.monetization_on_outlined),
+                      SizedBox(width: 8),
+                      Text('Por valor'),
+                    ]),
+                  ),
+                if (widget.isComm && _isNational)
+                  const PopupMenuItem(
+                    value: _FilterMode.year,
+                    child: Row(children: [
+                      Icon(Icons.calendar_today_outlined),
+                      SizedBox(width: 8),
+                      Text('Por año'),
+                    ]),
+                  ),
+              ],
+            ),
+          // Menú para emisiones conjuntas
+          if (widget.isComm && !_isNational)
+            PopupMenuButton<_FilterMode>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              tooltip: 'Modo de visualización',
+              onSelected: (mode) => setState(() => _mode = mode),
+              itemBuilder: (_) => [
                 const PopupMenuItem(
-                  value: _FilterMode.year,
+                  value: _FilterMode.jointCountry,
                   child: Row(children: [
-                    Icon(Icons.calendar_today_outlined),
+                    Icon(Icons.flag_outlined),
                     SizedBox(width: 8),
-                    Text('Por año'),
+                    Text('Por país'),
                   ]),
                 ),
-            ],
-          ),
+                const PopupMenuItem(
+                  value: _FilterMode.jointSeries,
+                  child: Row(children: [
+                    Icon(Icons.collections_bookmark_outlined),
+                    SizedBox(width: 8),
+                    Text('Por serie'),
+                  ]),
+                ),
+              ],
+            ),
         ],
-        // Tabs Nacional/Conjunta solo para conmemorativas
         bottom: widget.isComm
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(48),
@@ -81,7 +105,7 @@ class _FilterScreenState extends State<FilterScreen> {
       child: Row(
         children: [
           _TabButton(
-            label: 'Nacional',
+            label: 'Emisiones nacionales',
             selected: _isNational,
             onTap: () => setState(() {
               _isNational = true;
@@ -89,11 +113,11 @@ class _FilterScreenState extends State<FilterScreen> {
             }),
           ),
           _TabButton(
-            label: 'Conjunta',
+            label: 'Emisiones conjuntas',
             selected: !_isNational,
             onTap: () => setState(() {
               _isNational = false;
-              _mode = _FilterMode.joint;
+              _mode = _FilterMode.jointCountry;
             }),
           ),
         ],
@@ -105,21 +129,18 @@ class _FilterScreenState extends State<FilterScreen> {
     final provider = context.watch<AppProvider>();
 
     if (!widget.isComm) {
-      // Normales
       if (_mode == _FilterMode.value) return _ValueGrid(provider: provider);
       return _CountryGrid(provider: provider, isComm: false);
     }
 
-    // Conmemorativas
     if (!_isNational) {
-      return _JointSeriesGrid(provider: provider);
+      if (_mode == _FilterMode.jointSeries) {
+        return _JointSeriesGrid(provider: provider);
+      }
+      return _JointCountryGrid(provider: provider);
     }
-    if (_mode == _FilterMode.year) {
-      return _YearGrid(provider: provider);
-    }
-    if (_mode == _FilterMode.value) {
-      return _ValueGrid(provider: provider, isComm: true);
-    }
+
+    if (_mode == _FilterMode.year) return _YearGrid(provider: provider);
     return _CountryGrid(provider: provider, isComm: true);
   }
 }
@@ -147,21 +168,21 @@ class _CountryGrid extends StatelessWidget {
       itemCount: countries.length,
       itemBuilder: (context, i) {
         final c = countries[i];
-        final allCoinsForCountry = isComm
+        final coins = isComm
             ? provider.nationalCommCoins
                 .where((coin) => coin.idPais == c['idPais'])
                 .toList()
             : provider.normalCoins
                 .where((coin) => coin.idPais == c['idPais'])
                 .toList();
-        final collected = provider.countCollected(allCoinsForCountry);
+        final collected = provider.countCollected(coins);
 
         return GridItem(
           label: c['paisES']!,
           imageFilename: c['flag'],
           imageType: CoinImageType.flag,
           collected: collected,
-          total: allCoinsForCountry.length,
+          total: coins.length,
           onTap: () {
             final grouped = isComm
                 ? provider.commCoinsByCountry(c['idPais']!)
@@ -182,12 +203,11 @@ class _CountryGrid extends StatelessWidget {
   }
 }
 
-// ── Cuadrícula de valores ──────────────────────────────────────────────────
+// ── Cuadrícula de valores (solo normales) ──────────────────────────────────
 
 class _ValueGrid extends StatelessWidget {
   final AppProvider provider;
-  final bool isComm;
-  const _ValueGrid({required this.provider, this.isComm = false});
+  const _ValueGrid({required this.provider});
 
   @override
   Widget build(BuildContext context) {
@@ -202,9 +222,7 @@ class _ValueGrid extends StatelessWidget {
       itemCount: AppConstants.allValues.length,
       itemBuilder: (context, i) {
         final v = AppConstants.allValues[i];
-        final coins = isComm
-            ? provider.commCoins.where((c) => c.valor == v).toList()
-            : provider.normalCoinsByValue(v);
+        final coins = provider.normalCoinsByValue(v);
         final collected = provider.countCollected(coins);
 
         return GridItem(
@@ -272,7 +290,52 @@ class _YearGrid extends StatelessWidget {
   }
 }
 
-// ── Cuadrícula de series conjuntas ─────────────────────────────────────────
+// ── Emisiones conjuntas: por país ──────────────────────────────────────────
+
+class _JointCountryGrid extends StatelessWidget {
+  final AppProvider provider;
+  const _JointCountryGrid({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final countries = provider.jointCountries;
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.3,
+      ),
+      itemCount: countries.length,
+      itemBuilder: (context, i) {
+        final c = countries[i];
+        final coins = provider.jointCoinsByCountry(c['idPais']!);
+        final collected = provider.countCollected(coins);
+
+        return GridItem(
+          label: c['paisES']!,
+          imageFilename: c['flag'],
+          imageType: CoinImageType.flag,
+          collected: collected,
+          total: coins.length,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CoinListScreen(
+                title: c['paisES']!,
+                coins: coins,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Emisiones conjuntas: por serie ─────────────────────────────────────────
 
 class _JointSeriesGrid extends StatelessWidget {
   final AppProvider provider;
@@ -317,13 +380,12 @@ class _JointSeriesGrid extends StatelessWidget {
   }
 }
 
-// ── Botón de tab interno ───────────────────────────────────────────────────
+// ── Botón de tab ───────────────────────────────────────────────────────────
 
 class _TabButton extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-
   const _TabButton(
       {required this.label, required this.selected, required this.onTap});
 
@@ -347,7 +409,7 @@ class _TabButton extends StatelessWidget {
                 color: Colors.white,
                 fontWeight:
                     selected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 15,
+                fontSize: 13,
               ),
             ),
           ),

@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle:
                 const Text('Si te es útil, considera una donación'),
             onTap: () => launchUrl(
-              Uri.parse('https://www.paypal.com/donate'),
+              Uri.parse('https://www.paypal.com/paypalme/my/profile'),
               mode: LaunchMode.externalApplication,
             ),
           ),

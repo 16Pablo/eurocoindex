@@ -41,7 +41,7 @@ class CoinListItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Valor (grande y en negrita)
+                    // Valor
                     Text(
                       coin.valorLabel,
                       style: TextStyle(
@@ -61,8 +61,23 @@ class CoinListItem extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    // Descripción de la moneda
+                    if (coin.descrCoinES != null &&
+                        coin.descrCoinES!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        coin.descrCoinES!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.grey[300]
+                              : Colors.grey[700],
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 2),
-                    // Nombre en idioma original
+                    // País en idioma original
                     if (coin.paisVO.isNotEmpty)
                       Text(
                         coin.paisVO,
@@ -98,8 +113,7 @@ class CoinListItem extends StatelessWidget {
                   ),
                   child: Icon(
                     collected ? Icons.check : Icons.add,
-                    color:
-                        collected ? Colors.white : Colors.grey,
+                    color: collected ? Colors.white : Colors.grey,
                     size: 18,
                   ),
                 ),

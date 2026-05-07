@@ -21,7 +21,7 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.only(right: 16),
               child: Center(
                 child: Text(
-                  '${provider.countCollected(provider.allCoins)}/${provider.allCoins.length}',
+                  '${provider.countCollected(provider.allCoins.where((c) => c.emitida).toList())}/${provider.allCoins.where((c) => c.emitida).length}',
                   style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -60,8 +60,7 @@ class _HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    final normalCollected =
-        provider.countCollected(provider.normalCoins);
+    final normalCollected = provider.countCollected(provider.normalCoins);
     final normalTotal = provider.normalCoins.length;
     final commCollected = provider.countCollected(provider.commCoins);
     final commTotal = provider.commCoins.length;
@@ -86,44 +85,33 @@ class _HomeContent extends StatelessWidget {
                   color: colorScheme.onSurface.withOpacity(0.6),
                 ),
           ),
-          const SizedBox(height: 32),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _TypeButton(
-                    label: 'Normales',
-                    icon: Icons.toll,
-                    collected: normalCollected,
-                    total: normalTotal,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FilterScreen(
-                          isComm: false,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _TypeButton(
-                    label: 'Conmemorativas',
-                    icon: Icons.star_outlined,
-                    collected: commCollected,
-                    total: commTotal,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FilterScreen(
-                          isComm: true,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 24),
+          // Botones en columna, más compactos
+          _TypeButton(
+            label: 'Monedas Normales',
+            iconAsset: 'assets/icons/icon_normal.png',
+            fallbackIcon: Icons.toll,
+            collected: normalCollected,
+            total: normalTotal,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const FilterScreen(isComm: false),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _TypeButton(
+            label: 'Monedas Conmemorativas',
+            iconAsset: 'assets/icons/icon_comm.png',
+            fallbackIcon: Icons.star_outlined,
+            collected: commCollected,
+            total: commTotal,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const FilterScreen(isComm: true),
+              ),
             ),
           ),
         ],
@@ -134,14 +122,16 @@ class _HomeContent extends StatelessWidget {
 
 class _TypeButton extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String iconAsset;
+  final IconData fallbackIcon;
   final int collected;
   final int total;
   final VoidCallback onTap;
 
   const _TypeButton({
     required this.label,
-    required this.icon,
+    required this.iconAsset,
+    required this.fallbackIcon,
     required this.collected,
     required this.total,
     required this.onTap,
@@ -158,40 +148,56 @@ class _TypeButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
             children: [
-              Icon(icon, size: 64, color: colorScheme.primary),
-              const SizedBox(height: 16),
-              Text(
-                label,
-                style: const TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+              // Icono
+              Image.asset(
+                iconAsset,
+                width: 48,
+                height: 48,
+                errorBuilder: (_, __, ___) =>
+                    Icon(fallbackIcon, size: 48, color: colorScheme.primary),
               ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 8,
-                  backgroundColor:
-                      isDark ? Colors.grey[700] : Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progress == 1.0 ? Colors.green : colorScheme.primary,
-                  ),
+              const SizedBox(width: 16),
+              // Texto y progreso
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 7,
+                        backgroundColor:
+                            isDark ? Colors.grey[700] : Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress == 1.0 ? Colors.green : colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$collected / $total',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                '$collected / $total',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colorScheme.onSurface.withOpacity(0.6),
-                ),
-              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right,
+                  color: colorScheme.onSurface.withOpacity(0.4)),
             ],
           ),
         ),
@@ -203,7 +209,6 @@ class _TypeButton extends StatelessWidget {
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-
   const _ErrorView({required this.message, required this.onRetry});
 
   @override
@@ -216,17 +221,13 @@ class _ErrorView extends StatelessWidget {
           children: [
             const Icon(Icons.wifi_off, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text(
-              'No se pudieron cargar los datos',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
+            const Text('No se pudieron cargar los datos',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center),
             const SizedBox(height: 8),
-            Text(
-              message,
-              style: const TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
+            Text(message,
+                style: const TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: onRetry,
