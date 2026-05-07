@@ -29,6 +29,43 @@ class CoinsService {
     }
   }
 
+  /// Borra la caché de imágenes de cached_network_image
+  /// Se llama al actualizar el catálogo para forzar la descarga de imágenes nuevas
+  Future<void> clearImageCache() async {
+    try {
+      final cacheDir = await getTemporaryDirectory();
+      final dir = Directory(cacheDir.path);
+      if (await dir.exists()) {
+        // Eliminar archivos de caché de imágenes (cached_network_image
+        // guarda las imágenes en el directorio temporal con prefijo libCachedImageData)
+        await for (final entity in dir.list()) {
+          if (entity is File) {
+            final name = entity.path.split('/').last;
+            if (name.startsWith('libCachedImageData') ||
+                name.endsWith('.webp') ||
+                name.endsWith('.png') ||
+                name.endsWith('.jpg')) {
+              try {
+                await entity.delete();
+              } catch (_) {}
+            }
+          } else if (entity is Directory) {
+            final dirName = entity.path.split('/').last;
+            if (dirName.contains('libCachedImageData') ||
+                dirName.contains('cache')) {
+              try {
+                await entity.delete(recursive: true);
+              } catch (_) {}
+            }
+          }
+        }
+      }
+      debugPrint('Caché de imágenes borrada');
+    } catch (e) {
+      debugPrint('Error borrando caché de imágenes: $e');
+    }
+  }
+
   /// Descarga el CSV desde GitHub
   Future<String> _fetchFromGitHub() async {
     final response =
@@ -43,12 +80,11 @@ class CoinsService {
 
   /// Parsea el texto CSV a lista de monedas
   List<Coin> _parseCsv(String csvText) {
-    // Detectar separador (coma o punto y coma)
     final sep = csvText.contains(';') ? ';' : ',';
 
     final rows = const CsvToListConverter(
       eol: '\n',
-      fieldDelimiter: ',', // se sobreescribe abajo si es ';'
+      fieldDelimiter: ',',
     ).convert(csvText);
 
     List<List<dynamic>> parsed;
@@ -66,13 +102,18 @@ class CoinsService {
     final headers =
         parsed.first.map((h) => h.toString().trim()).toList();
 
-    return parsed.skip(1).where((row) => row.length >= headers.length).map((row) {
-      final map = <String, dynamic>{};
-      for (int i = 0; i < headers.length; i++) {
-        map[headers[i]] = i < row.length ? row[i] : null;
-      }
-      return Coin.fromCsvRow(map);
-    }).where((c) => c.id > 0).toList();
+    return parsed
+        .skip(1)
+        .where((row) => row.length >= headers.length)
+        .map((row) {
+          final map = <String, dynamic>{};
+          for (int i = 0; i < headers.length; i++) {
+            map[headers[i]] = i < row.length ? row[i] : null;
+          }
+          return Coin.fromCsvRow(map);
+        })
+        .where((c) => c.id > 0)
+        .toList();
   }
 
   /// Guarda el CSV en caché local

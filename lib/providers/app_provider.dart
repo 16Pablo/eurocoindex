@@ -199,13 +199,18 @@ class AppProvider extends ChangeNotifier {
 
   // ── Carga ─────────────────────────────────────────────────────────────────
 
-  Future<void> loadData() async {
+  Future<void> loadData({bool clearImageCache = false}) async {
     if (_state == LoadingState.loading) return;
     _state = LoadingState.loading;
     _errorMessage = '';
     notifyListeners();
 
     try {
+      // Si se pide actualización manual, borrar caché de imágenes
+      // para que las imágenes nuevas se descarguen correctamente
+      if (clearImageCache) {
+        await _coinsService.clearImageCache();
+      }
       final results = await Future.wait([
         _coinsService.loadCoins(),
         _collectionService.getCollectedIds(),

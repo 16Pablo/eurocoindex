@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle:
                 const Text('Si te es útil, considera una donación'),
             onTap: () => launchUrl(
-              Uri.parse('https://www.paypal.com/paypalme/my/profile'),
+              Uri.parse('https://www.paypal.com/paypalme/16Pablo'),
               mode: LaunchMode.externalApplication,
             ),
           ),
@@ -209,10 +209,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _refreshData(BuildContext context) async {
     final provider = context.read<AppProvider>();
-    await provider.loadData();
+    await provider.loadData(clearImageCache: true);
     final lastUpdate = await provider.getLastUpdate();
     setState(() => _lastUpdate = lastUpdate);
-    _showSnack(context, 'Catálogo actualizado correctamente');
+    _showSnack(context, 'Catálogo e imágenes actualizados correctamente');
   }
 
   void _showSnack(BuildContext context, String msg,
