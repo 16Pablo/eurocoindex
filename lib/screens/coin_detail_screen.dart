@@ -32,13 +32,29 @@ class CoinDetailScreen extends StatelessWidget {
         AppConstants.valueImageUrl(coin.imageComun2!),
     ];
 
-    // Monedas relacionadas (mismo tag)
-    final related = coin.tagES != null
+    // Monedas con la misma coincidencia (nivel más específico)
+    final similar = coin.coincidencia != null
         ? provider.allCoins
             .where((c) =>
-                c.tagES == coin.tagES &&
+                c.coincidencia == coin.coincidencia &&
                 c.id != coin.id &&
                 c.emitida)
+            .take(10)
+            .toList()
+        : <Coin>[];
+
+    // Monedas relacionadas: mismo subtag si existe, si no mismo tag
+    // Excluir las que ya aparecen en "similar"
+    final similarIds = similar.map((c) => c.id).toSet();
+    final related = (coin.subtagES != null || coin.tagES != null)
+        ? provider.allCoins
+            .where((c) =>
+                c.id != coin.id &&
+                c.emitida &&
+                !similarIds.contains(c.id) &&
+                (coin.subtagES != null
+                    ? c.subtagES == coin.subtagES
+                    : c.tagES == coin.tagES))
             .take(10)
             .toList()
         : <Coin>[];
@@ -114,11 +130,16 @@ class CoinDetailScreen extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _InfoChip(
+                    icon: Icons.monetization_on,
                     label: coin.valorLabel,
                     color: colorScheme.primary),
                 _InfoChip(
                     icon: Icons.calendar_today,
                     label: coin.yearRange),
+                if (coin.fecha != null && coin.fecha!.isNotEmpty)
+                  _InfoChip(
+                    icon: Icons.event,
+                    label: coin.fecha!),
                 if (coin.conm)
                   _InfoChip(
                     icon: Icons.star,
@@ -161,8 +182,10 @@ class CoinDetailScreen extends StatelessWidget {
               _DetailRow('Serie', coin.descrSerieES!),
             if (coin.tagES != null)
               _DetailRow('Categoría', coin.tagES!),
-            if (coin.subtag != null)
-              _DetailRow('Subcategoría', coin.subtag!),
+            if (coin.subtagES != null)
+              _DetailRow('Subcategoría', coin.subtagES!),
+            if (coin.coincidencia != null)
+              _DetailRow('Coincidencia', coin.coincidencia!),
             if (coin.rareza != null)
               _DetailRow('Rareza', '${coin.frase ?? ''} (${coin.rareza})'),
             if (coin.conjOficial != null)
@@ -219,6 +242,57 @@ class CoinDetailScreen extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Lista horizontal de monedas relacionadas ──────────────────────────────
+
+class _RelatedList extends StatelessWidget {
+  final List<Coin> coins;
+  const _RelatedList({required this.coins});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: coins.length,
+        itemBuilder: (context, i) {
+          final r = coins[i];
+          return GestureDetector(
+            onTap: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => CoinDetailScreen(coin: r)),
+            ),
+            child: Container(
+              width: 90,
+              margin: const EdgeInsets.only(right: 10),
+              child: Column(
+                children: [
+                  CoinImage(
+                    filename: r.imageCoin,
+                    type: CoinImageType.coin,
+                    width: 70,
+                    height: 70,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    r.paisES,
+                    style: const TextStyle(fontSize: 10),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -371,10 +445,10 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  final IconData? icon;
+  final IconData icon;
   final String label;
   final Color? color;
-  const _InfoChip({this.icon, required this.label, this.color});
+  const _InfoChip({required this.icon, required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -389,10 +463,8 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: c),
-            const SizedBox(width: 4),
-          ],
+          Icon(icon, size: 14, color: c),
+          const SizedBox(width: 4),
           Text(label, style: TextStyle(fontSize: 12, color: c)),
         ],
       ),

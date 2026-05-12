@@ -150,12 +150,19 @@ class AppProvider extends ChangeNotifier {
       if (valor != null && c.valor != valor) return false;
       if (idPais != null && c.idPais != idPais) return false;
       if (year != null && !c.issuedInYear(year)) return false;
-      if (tag != null && c.tagES != tag) return false;
+      // El filtro de tag busca en tag, subtag y coincidencia
+      if (tag != null &&
+          c.tagES != tag &&
+          c.subtagES != tag &&
+          c.coincidencia != tag) return false;
       return true;
     }).toList()
       ..sort((a, b) {
-        final pc = a.paisES.compareTo(b.paisES);
-        return pc != 0 ? pc : a.anoInicio.compareTo(b.anoInicio);
+        final dc = a.sortKey.compareTo(b.sortKey);
+        if (dc != 0) return dc;
+        final titleA = a.titulo ?? a.descrSerieES ?? '';
+        final titleB = b.titulo ?? b.descrSerieES ?? '';
+        return titleA.compareTo(titleB);
       });
   }
 
@@ -163,6 +170,8 @@ class AppProvider extends ChangeNotifier {
     final tags = <String>{};
     for (final c in _allCoins) {
       if (c.tagES != null) tags.add(c.tagES!);
+      if (c.subtagES != null) tags.add(c.subtagES!);
+      if (c.coincidencia != null) tags.add(c.coincidencia!);
     }
     return tags.toList()..sort();
   }

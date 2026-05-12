@@ -18,7 +18,7 @@ class FilterScreen extends StatefulWidget {
 enum _FilterMode { country, value, year, jointCountry, jointSeries }
 
 class _FilterScreenState extends State<FilterScreen> {
-  _FilterMode _mode = _FilterMode.country;
+  _FilterMode _mode = _FilterMode.year;
   bool _isNational = true;
 
   @override
@@ -109,7 +109,7 @@ class _FilterScreenState extends State<FilterScreen> {
             selected: _isNational,
             onTap: () => setState(() {
               _isNational = true;
-              _mode = _FilterMode.country;
+              _mode = _FilterMode.year;
             }),
           ),
           _TabButton(
@@ -117,7 +117,7 @@ class _FilterScreenState extends State<FilterScreen> {
             selected: !_isNational,
             onTap: () => setState(() {
               _isNational = false;
-              _mode = _FilterMode.jointCountry;
+              _mode = _FilterMode.jointSeries;
             }),
           ),
         ],
@@ -272,7 +272,8 @@ class _YearGrid extends StatelessWidget {
 
         return GridItem(
           label: '$year',
-          imageFilename: null,
+          imageFilename: AppConstants.yearIconFilename(year),
+          imageType: CoinImageType.yearIcon,
           collected: collected,
           total: coins.length,
           onTap: () => Navigator.push(

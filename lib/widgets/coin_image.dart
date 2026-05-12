@@ -4,7 +4,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../models/app_constants.dart';
 
-enum CoinImageType { coin, flag, value }
+enum CoinImageType { coin, flag, value, yearIcon }
 
 class CoinImage extends StatelessWidget {
   final String? filename;
@@ -33,6 +33,8 @@ class CoinImage extends StatelessWidget {
         return AppConstants.flagImageUrl(filename!);
       case CoinImageType.value:
         return AppConstants.valueImageUrl(filename!);
+      case CoinImageType.yearIcon:
+        return AppConstants.iconImageUrl(filename!);
     }
   }
 
@@ -59,7 +61,7 @@ class CoinImage extends StatelessWidget {
         borderRadius: borderRadius,
       ),
       child: Icon(
-        type == CoinImageType.flag ? Icons.flag : Icons.monetization_on,
+        type == CoinImageType.flag ? Icons.flag : type == CoinImageType.flag ? Icons.flag : Icons.euro,
         color: isDark ? Colors.grey[600] : Colors.grey[400],
         size: (width ?? 40) * 0.5,
       ),

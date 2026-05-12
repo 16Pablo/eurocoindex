@@ -16,6 +16,12 @@ class AppConstants {
   static String valueImageUrl(String filename) =>
       '$githubRawBase/assets/values/$filename';
 
+  static String iconImageUrl(String filename) =>
+      '$githubRawBase/assets/icons/$filename';
+
+  /// Nombre del icono de año: "2009.webp"
+  static String yearIconFilename(int year) => '$year.webp';
+
   // ── Caché local ──────────────────────────────────────────────────────────
   static const String cachedCsvFileName = 'coins_cache.csv';
   static const String collectionExportFileName = 'eurocoindex_coleccion.csv';

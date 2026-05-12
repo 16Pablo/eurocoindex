@@ -6,19 +6,17 @@ import '../providers/app_provider.dart';
 import '../widgets/coin_list_item.dart';
 import 'coin_detail_screen.dart';
 
-/// Lista de monedas. Admite lista plana o agrupada por serie.
 class CoinListScreen extends StatefulWidget {
   final String title;
-  final List<Coin>? coins; // lista plana
-  final Map<String, List<Coin>>? groupedCoins; // agrupada por serie
+  final List<Coin>? coins;
+  final Map<String, List<Coin>>? groupedCoins;
 
   const CoinListScreen({
     super.key,
     required this.title,
     this.coins,
     this.groupedCoins,
-  }) : assert(coins != null || groupedCoins != null,
-            'Se necesita coins o groupedCoins');
+  }) : assert(coins != null || groupedCoins != null);
 
   @override
   State<CoinListScreen> createState() => _CoinListScreenState();
@@ -28,8 +26,17 @@ class _CoinListScreenState extends State<CoinListScreen> {
   CollectionFilter _filter = CollectionFilter.all;
   String? _selectedSerie;
 
-  List<String> get _serieKeys =>
-      widget.groupedCoins?.keys.toList() ?? [];
+  List<String> get _serieKeys {
+    if (widget.groupedCoins == null) return [];
+    final keys = widget.groupedCoins!.keys.toList();
+    // "Sin serie" siempre primero
+    keys.sort((a, b) {
+      if (a == 'Sin serie') return -1;
+      if (b == 'Sin serie') return 1;
+      return a.compareTo(b);
+    });
+    return keys;
+  }
 
   List<Coin> get _displayCoins {
     final provider = context.read<AppProvider>();
@@ -40,7 +47,19 @@ class _CoinListScreenState extends State<CoinListScreen> {
     } else {
       coins = widget.coins!;
     }
+    // Ordenar por fecha (aaaa/mm/dd) o anoinicio, secundario por título
+    coins = List.of(coins)..sort(_compareCoin);
     return provider.applyFilter(coins, _filter);
+  }
+
+  int _compareCoin(Coin a, Coin b) {
+    // Primero por DateSort (aaaa/mm/dd) o anoinicio como fallback
+    final dateCmp = a.sortKey.compareTo(b.sortKey);
+    if (dateCmp != 0) return dateCmp;
+    // Secundario: título
+    final titleA = a.titulo ?? a.descrSerieES ?? '';
+    final titleB = b.titulo ?? b.descrSerieES ?? '';
+    return titleA.compareTo(titleB);
   }
 
   @override
@@ -51,24 +70,19 @@ class _CoinListScreenState extends State<CoinListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppProvider>(); // para rebuild en toggles
+    context.watch<AppProvider>();
     final coins = _displayCoins;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       body: Column(
         children: [
-          // Tabs de serie (si hay agrupación)
           if (widget.groupedCoins != null && _serieKeys.length > 1)
             _SeriesTabs(
               keys: _serieKeys,
               selected: _selectedSerie ?? _serieKeys.first,
               onSelect: (k) => setState(() => _selectedSerie = k),
             ),
-
-          // Lista
           Expanded(
             child: coins.isEmpty
                 ? const _EmptyView()
@@ -88,7 +102,6 @@ class _CoinListScreenState extends State<CoinListScreen> {
           ),
         ],
       ),
-      // Filtro inferior
       bottomNavigationBar: _BottomFilter(
         selected: _filter,
         onSelect: (f) => setState(() => _filter = f),
@@ -119,17 +132,13 @@ class _CoinListScreenState extends State<CoinListScreen> {
   }
 }
 
-// ── Tabs de series ─────────────────────────────────────────────────────────
-
 class _SeriesTabs extends StatelessWidget {
   final List<String> keys;
   final String selected;
   final ValueChanged<String> onSelect;
 
   const _SeriesTabs(
-      {required this.keys,
-      required this.selected,
-      required this.onSelect});
+      {required this.keys, required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -157,8 +166,6 @@ class _SeriesTabs extends StatelessWidget {
     );
   }
 }
-
-// ── Filtro inferior Todas/Obtenidas/Faltantes ──────────────────────────────
 
 class _BottomFilter extends StatelessWidget {
   final CollectionFilter selected;
@@ -239,8 +246,7 @@ class _FilterBtn extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              fontWeight:
-                  selected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
               color: selected ? colorScheme.primary : null,
             ),
             textAlign: TextAlign.center,
