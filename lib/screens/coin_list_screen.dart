@@ -53,10 +53,16 @@ class _CoinListScreenState extends State<CoinListScreen> {
   }
 
   int _compareCoin(Coin a, Coin b) {
-    // Primero por DateSort (aaaa/mm/dd) o anoinicio como fallback
+    // 1. Valor (de mayor a menor)
+    final valorCmp = b.valor.compareTo(a.valor);
+    if (valorCmp != 0) return valorCmp;
+    // 2. Año de inicio (más antiguo primero)
+    final anoCmp = a.anoInicio.compareTo(b.anoInicio);
+    if (anoCmp != 0) return anoCmp;
+    // 3. Fecha de emisión / DateSort (más antiguo primero)
     final dateCmp = a.sortKey.compareTo(b.sortKey);
     if (dateCmp != 0) return dateCmp;
-    // Secundario: título
+    // 4. Título (alfabético A-Z)
     final titleA = a.titulo ?? a.descrSerieES ?? '';
     final titleB = b.titulo ?? b.descrSerieES ?? '';
     return titleA.compareTo(titleB);

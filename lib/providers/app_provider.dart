@@ -158,8 +158,12 @@ class AppProvider extends ChangeNotifier {
       return true;
     }).toList()
       ..sort((a, b) {
-        final dc = a.sortKey.compareTo(b.sortKey);
-        if (dc != 0) return dc;
+        final valorCmp = b.valor.compareTo(a.valor);
+        if (valorCmp != 0) return valorCmp;
+        final anoCmp = a.anoInicio.compareTo(b.anoInicio);
+        if (anoCmp != 0) return anoCmp;
+        final dateCmp = a.sortKey.compareTo(b.sortKey);
+        if (dateCmp != 0) return dateCmp;
         final titleA = a.titulo ?? a.descrSerieES ?? '';
         final titleB = b.titulo ?? b.descrSerieES ?? '';
         return titleA.compareTo(titleB);
