@@ -130,7 +130,6 @@ class CoinDetailScreen extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _InfoChip(
-                    icon: Icons.monetization_on,
                     label: coin.valorLabel,
                     color: colorScheme.primary),
                 _InfoChip(
@@ -445,10 +444,10 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
   final String label;
   final Color? color;
-  const _InfoChip({required this.icon, required this.label, this.color});
+  const _InfoChip({this.icon, required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -463,8 +462,10 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: c),
-          const SizedBox(width: 4),
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: c),
+            const SizedBox(width: 4),
+          ],
           Text(label, style: TextStyle(fontSize: 12, color: c)),
         ],
       ),

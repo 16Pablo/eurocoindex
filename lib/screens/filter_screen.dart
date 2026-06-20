@@ -46,7 +46,7 @@ class _FilterScreenState extends State<FilterScreen> {
                   const PopupMenuItem(
                     value: _FilterMode.value,
                     child: Row(children: [
-                      Icon(Icons.monetization_on_outlined),
+                      Icon(Icons.euro_outlined),
                       SizedBox(width: 8),
                       Text('Por valor'),
                     ]),
