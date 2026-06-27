@@ -55,7 +55,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig hasReleaseKey ? signingConfigs.release : signingConfigs.debug
+            signingConfig signingConfigs.release
 
             minifyEnabled true
             shrinkResources true
