@@ -30,3 +30,8 @@ android/key.properties
 
 # Logs
 *.log
+
+# Firma de la app
+android/app/androidkey.properties
+android/app/*.jks
+*.jks
