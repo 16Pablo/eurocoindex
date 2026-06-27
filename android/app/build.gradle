@@ -4,20 +4,12 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
-}
-
 def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
-def hasReleaseKey = keystorePropertiesFile.exists()
-
-if (hasReleaseKey) {
+def keystorePropertiesFile = rootProject.file('app/androidkey.properties')
+if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    throw new GradleException("key.properties not found. Create android/key.properties with your signing config.")
 }
 
 android {
@@ -36,7 +28,7 @@ android {
 
     defaultConfig {
         applicationId "com.pablo.eurocoindex"
-        minSdk flutter.minSdkVersion
+        minSdk 21
         targetSdk 36
         versionCode flutter.versionCode
         versionName flutter.versionName
@@ -44,26 +36,19 @@ android {
 
     signingConfigs {
         release {
-            if (hasReleaseKey) {
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-            }
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
         }
     }
 
     buildTypes {
         release {
             signingConfig signingConfigs.release
-
             minifyEnabled true
             shrinkResources true
-
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 }
