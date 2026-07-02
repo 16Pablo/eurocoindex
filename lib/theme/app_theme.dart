@@ -48,7 +48,7 @@ class AppTheme {
           ),
         ),
         chipTheme: ChipThemeData(
-          backgroundColor: _primaryLight.withOpacity(0.15),
+          backgroundColor: _primaryLight.withValues(alpha: 0.15),
           selectedColor: _primaryColor,
           labelStyle: const TextStyle(fontSize: 13),
           shape: RoundedRectangleBorder(
@@ -110,7 +110,7 @@ class AppTheme {
           ),
         ),
         chipTheme: ChipThemeData(
-          backgroundColor: _primaryDark.withOpacity(0.4),
+          backgroundColor: _primaryDark.withValues(alpha: 0.4),
           selectedColor: _accent,
           labelStyle: const TextStyle(
               fontSize: 13, color: Colors.white),

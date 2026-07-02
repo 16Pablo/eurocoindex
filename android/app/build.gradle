@@ -1,6 +1,6 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
+    // "kotlin-android" eliminado: Flutter lo gestiona internamente desde versiones recientes
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -9,7 +9,7 @@ def keystorePropertiesFile = rootProject.file('app/androidkey.properties')
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 } else {
-    throw new GradleException("key.properties not found. Create android/key.properties with your signing config.")
+    throw new GradleException("androidkey.properties not found in android/app/")
 }
 
 android {
@@ -18,17 +18,17 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 
     defaultConfig {
         applicationId "com.pablo.eurocoindex"
-        minSdkVersion flutter.minSdkVersion
+        minSdk 21
         targetSdk 36
         versionCode flutter.versionCode
         versionName flutter.versionName

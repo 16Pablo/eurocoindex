@@ -82,7 +82,7 @@ class _HomeContent extends StatelessWidget {
           Text(
             '${normalCollected + commCollected} de ${normalTotal + commTotal} monedas obtenidas',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
           ),
           const SizedBox(height: 24),
@@ -189,7 +189,7 @@ class _TypeButton extends StatelessWidget {
                       '$collected / $total',
                       style: TextStyle(
                         fontSize: 12,
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -197,7 +197,7 @@ class _TypeButton extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Icon(Icons.chevron_right,
-                  color: colorScheme.onSurface.withOpacity(0.4)),
+                  color: colorScheme.onSurface.withValues(alpha: 0.4)),
             ],
           ),
         ),

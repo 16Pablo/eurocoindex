@@ -26,12 +26,10 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    // Años disponibles: 1999 al año actual
     final currentYear = DateTime.now().year;
     final years = List.generate(
         currentYear - 1999 + 1, (i) => 1999 + i);
 
-    // Países únicos
     final countries = {
       for (final c in provider.allCoins) c.idPais: c.paisES
     }.entries.toList()
@@ -47,13 +45,11 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(title: const Text('Buscar')),
       body: Column(
         children: [
-          // ── Panel de filtros ─────────────────────────────────────────
           Container(
             color: Theme.of(context).colorScheme.surfaceContainerLow,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               children: [
-                // Fila 1: Valor + País
                 Row(
                   children: [
                     Expanded(
@@ -97,7 +93,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                // Fila 2: Año + Tema
                 Row(
                   children: [
                     Expanded(
@@ -140,7 +135,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Botón buscar + limpiar
                 Row(
                   children: [
                     Expanded(
@@ -161,7 +155,6 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
 
-          // ── Resultados ───────────────────────────────────────────────
           if (_results != null) ...[
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -180,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.5),
+                          .withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),
@@ -226,7 +219,6 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
         ],
       ),
-      // Filtro Todas/Obtenidas/Faltantes
       bottomNavigationBar: _results != null
           ? _BottomFilterBar(
               filter: _filter,
@@ -262,8 +254,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-// ── Dropdown genérico ──────────────────────────────────────────────────────
-
 class _DropdownField<T> extends StatelessWidget {
   final String label;
   final T? value;
@@ -280,7 +270,7 @@ class _DropdownField<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
@@ -291,8 +281,6 @@ class _DropdownField<T> extends StatelessWidget {
     );
   }
 }
-
-// ── Barra de filtro inferior ──────────────────────────────────────────────
 
 class _BottomFilterBar extends StatelessWidget {
   final CollectionFilter filter;
@@ -310,7 +298,7 @@ class _BottomFilterBar extends StatelessWidget {
         color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 4,
               offset: const Offset(0, -2))
         ],

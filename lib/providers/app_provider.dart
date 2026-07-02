@@ -154,7 +154,9 @@ class AppProvider extends ChangeNotifier {
       if (tag != null &&
           c.tagES != tag &&
           c.subtagES != tag &&
-          c.coincidencia != tag) return false;
+          c.coincidencia != tag) {
+        return false;
+      }
       return true;
     }).toList()
       ..sort((a, b) {
@@ -173,9 +175,15 @@ class AppProvider extends ChangeNotifier {
   List<String> get allTags {
     final tags = <String>{};
     for (final c in _allCoins) {
-      if (c.tagES != null) tags.add(c.tagES!);
-      if (c.subtagES != null) tags.add(c.subtagES!);
-      if (c.coincidencia != null) tags.add(c.coincidencia!);
+      if (c.tagES != null) {
+        tags.add(c.tagES!);
+      }
+      if (c.subtagES != null) {
+        tags.add(c.subtagES!);
+      }
+      if (c.coincidencia != null) {
+        tags.add(c.coincidencia!);
+      }
     }
     return tags.toList()..sort();
   }
@@ -213,7 +221,9 @@ class AppProvider extends ChangeNotifier {
   // ── Carga ─────────────────────────────────────────────────────────────────
 
   Future<void> loadData({bool clearImageCache = false}) async {
-    if (_state == LoadingState.loading) return;
+    if (_state == LoadingState.loading) {
+      return;
+    }
     _state = LoadingState.loading;
     _errorMessage = '';
     notifyListeners();

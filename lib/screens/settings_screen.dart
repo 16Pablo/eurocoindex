@@ -28,8 +28,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadInfo() async {
     final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
     final provider = context.read<AppProvider>();
     final lastUpdate = await provider.getLastUpdate();
+    if (!mounted) return;
     setState(() {
       _appVersion = '${info.version}+${info.buildNumber}';
       _lastUpdate = lastUpdate;
@@ -48,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         children: [
-          _SectionHeader('Mi colección'),
+          const _SectionHeader('Mi colección'),
           Card(
             margin:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -94,13 +96,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          _SectionHeader('Copia de seguridad'),
+          const _SectionHeader('Copia de seguridad'),
           ListTile(
             leading: const Icon(Icons.upload),
             title: const Text('Exportar colección'),
             subtitle:
                 const Text('Guarda un archivo CSV con tus monedas'),
-            onTap: () => _exportCollection(context),
+            onTap: () => _exportCollection(),
           ),
           const Divider(indent: 56),
           ListTile(
@@ -108,10 +110,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Importar colección'),
             subtitle: const Text(
                 'Restaura una copia de seguridad (reemplaza la actual)'),
-            onTap: () => _importCollection(context),
+            onTap: () => _importCollection(),
           ),
 
-          _SectionHeader('Base de datos'),
+          const _SectionHeader('Base de datos'),
           ListTile(
             leading: const Icon(Icons.sync),
             title: const Text('Actualizar catálogo'),
@@ -119,10 +121,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ? Text(
                     'Última actualización: ${_lastUpdate!.day}/${_lastUpdate!.month}/${_lastUpdate!.year}')
                 : const Text('Nunca actualizado'),
-            onTap: () => _refreshData(context),
+            onTap: () => _refreshData(),
           ),
 
-          _SectionHeader('Acerca de'),
+          const _SectionHeader('Acerca de'),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('EuroCoinDex'),
@@ -136,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle:
                 const Text('Si te es útil, considera una donación'),
             onTap: () => launchUrl(
-              Uri.parse('https://www.paypal.com/paypalme/16Pablo'),
+              Uri.parse('https://www.paypal.com/paypalme/my/profile'),
               mode: LaunchMode.externalApplication,
             ),
           ),
@@ -158,21 +160,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _exportCollection(BuildContext context) async {
+  Future<void> _exportCollection() async {
     try {
       final provider = context.read<AppProvider>();
       final file = await provider.exportCollection();
+      if (!mounted) return;
       await Share.shareXFiles(
         [XFile(file.path)],
         text: 'Mi colección EuroCoinDex',
         subject: 'EuroCoinDex - Copia de seguridad',
       );
     } catch (e) {
-      _showSnack(context, 'Error al exportar: $e', isError: true);
+      if (!mounted) return;
+      _showSnack('Error al exportar: $e', isError: true);
     }
   }
 
-  Future<void> _importCollection(BuildContext context) async {
+  Future<void> _importCollection() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -190,6 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     if (confirmed != true) return;
+    if (!mounted) return;
 
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -197,26 +202,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
         allowedExtensions: ['csv'],
       );
       if (result == null || result.files.single.path == null) return;
+      if (!mounted) return;
 
       final file = File(result.files.single.path!);
       final provider = context.read<AppProvider>();
       final count = await provider.importCollection(file);
-      _showSnack(context, '$count monedas importadas correctamente');
+      if (!mounted) return;
+      _showSnack('$count monedas importadas correctamente');
     } catch (e) {
-      _showSnack(context, 'Error al importar: $e', isError: true);
+      if (!mounted) return;
+      _showSnack('Error al importar: $e', isError: true);
     }
   }
 
-  Future<void> _refreshData(BuildContext context) async {
+  Future<void> _refreshData() async {
     final provider = context.read<AppProvider>();
     await provider.loadData(clearImageCache: true);
+    if (!mounted) return;
     final lastUpdate = await provider.getLastUpdate();
+    if (!mounted) return;
     setState(() => _lastUpdate = lastUpdate);
-    _showSnack(context, 'Catálogo e imágenes actualizados correctamente');
+    _showSnack('Catálogo e imágenes actualizados correctamente');
   }
 
-  void _showSnack(BuildContext context, String msg,
-      {bool isError = false}) {
+  void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
@@ -225,6 +234,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
+// ── Widgets auxiliares ─────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String text;

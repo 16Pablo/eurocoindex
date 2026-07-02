@@ -8,7 +8,6 @@ import '../models/app_constants.dart';
 import '../models/coin.dart';
 import '../providers/app_provider.dart';
 import '../widgets/coin_image.dart';
-import 'coin_detail_screen.dart';
 
 class CoinDetailScreen extends StatelessWidget {
   final Coin coin;
@@ -20,7 +19,6 @@ class CoinDetailScreen extends StatelessWidget {
     final provider = context.watch<AppProvider>();
     final collected = provider.isCollected(coin.id);
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Imágenes disponibles de esta moneda
     final images = [
@@ -146,7 +144,7 @@ class CoinDetailScreen extends StatelessWidget {
                     color: Colors.amber[700],
                   ),
                 if (coin.conj)
-                  _InfoChip(
+                  const _InfoChip(
                       icon: Icons.groups,
                       label: 'Emisión conjunta'),
                 if (coin.frase != null)
@@ -158,7 +156,7 @@ class CoinDetailScreen extends StatelessWidget {
 
             // ── Descripción ──────────────────────────────────────────────
             if (coin.descrCoinES != null) ...[
-              _SectionTitle('Descripción'),
+              const _SectionTitle('Descripción'),
               Text(coin.descrCoinES!,
                   style: const TextStyle(fontSize: 14, height: 1.5)),
               const SizedBox(height: 12),
@@ -166,14 +164,14 @@ class CoinDetailScreen extends StatelessWidget {
 
             // ── Motivo (campo futuro) ────────────────────────────────────
             if (coin.motivoES != null) ...[
-              _SectionTitle('Motivo'),
+              const _SectionTitle('Motivo'),
               Text(coin.motivoES!,
                   style: const TextStyle(fontSize: 14, height: 1.5)),
               const SizedBox(height: 12),
             ],
 
             // ── Detalles ─────────────────────────────────────────────────
-            _SectionTitle('Detalles'),
+            const _SectionTitle('Detalles'),
             _DetailRow('País', '${coin.paisES} (${coin.paisVO})'),
             _DetailRow('Valor', coin.valorLabel),
             _DetailRow('Año de emisión', coin.yearRange),
@@ -192,51 +190,21 @@ class CoinDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ── Monedas relacionadas ──────────────────────────────────────
+            // ── Monedas con la misma coincidencia ─────────────────────────
+            if (similar.isNotEmpty) ...[
+              _SectionTitle('Monedas similares · ${coin.coincidencia}'),
+              const SizedBox(height: 8),
+              _RelatedList(coins: similar),
+              const SizedBox(height: 16),
+            ],
+
+            // ── Monedas relacionadas (mismo subtag o tag) ─────────────────
             if (related.isNotEmpty) ...[
               _SectionTitle(
-                  'Monedas relacionadas · ${coin.tagES}'),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: related.length,
-                  itemBuilder: (context, i) {
-                    final r = related[i];
-                    return GestureDetector(
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => CoinDetailScreen(coin: r)),
-                      ),
-                      child: Container(
-                        width: 90,
-                        margin: const EdgeInsets.only(right: 10),
-                        child: Column(
-                          children: [
-                            CoinImage(
-                              filename: r.imageCoin,
-                              type: CoinImageType.coin,
-                              width: 70,
-                              height: 70,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              r.paisES,
-                              style: const TextStyle(fontSize: 10),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                'Monedas relacionadas · ${coin.subtagES ?? coin.tagES}',
               ),
+              const SizedBox(height: 8),
+              _RelatedList(coins: related),
               const SizedBox(height: 16),
             ],
           ],
@@ -455,9 +423,9 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.12),
+        color: c.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: c.withOpacity(0.3)),
+        border: Border.all(color: c.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
