@@ -82,10 +82,9 @@ class CoinsService {
   List<Coin> _parseCsv(String csvText) {
     final sep = csvText.contains(';') ? ';' : ',';
 
-    final rows = const CsvToListConverter(
-      eol: '\n',
+    final rows = Csv(
       fieldDelimiter: ',',
-    ).convert(csvText);
+    ).decode(csvText);
 
     List<List<dynamic>> parsed;
     if (sep == ';') {

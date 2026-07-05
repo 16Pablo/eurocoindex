@@ -165,10 +165,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final provider = context.read<AppProvider>();
       final file = await provider.exportCollection();
       if (!mounted) return;
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Mi colección EuroCoinDex',
-        subject: 'EuroCoinDex - Copia de seguridad',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'Mi colección EuroCoinDex',
+          subject: 'EuroCoinDex - Copia de seguridad',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
