@@ -1,0 +1,9 @@
+icon_normal.png — el icono para Monedas Normales
+icon_comm.png — el icono para Monedas Conmemorativas
+
+
+Si no las pones, la app usa iconos genéricos de Flutter como respaldo, así que no es urgente. Cuando las tengas, añade esto en pubspec.yaml dentro de la sección flutter::
+yamlflutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/

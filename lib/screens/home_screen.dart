@@ -14,23 +14,28 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EuroCoinDex'),
-        actions: [
-          if (provider.isLoaded)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Text(
-                  '${provider.countCollected(provider.allCoins.where((c) => c.emitida).toList())}/${provider.allCoins.where((c) => c.emitida).length}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
-                ),
-              ),
-            ),
-        ],
+        title: ShaderMask(
+        blendMode: BlendMode.srcIn,
+        shaderCallback: (bounds) {
+          return const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Color(0xFFFFCC00), // <-- Pon aquí tu COLOR IZQUIERDO de la splash
+              Color(0xFF3388FF), // <-- Pon aquí tu COLOR DERECHO de la splash
+            ],
+          ).createShader(bounds);
+        },
+        child: const Text(
+          'EuroCoinDex',
+          style: TextStyle(
+            fontFamily: 'EuroCoinDexFont', // Tu fuente personalizada
+            fontWeight: FontWeight.bold,
+            fontSize: 14, // Puedes subir o bajar este número si se ve muy grande o pequeño
+          ),
+        ),
       ),
+    ), // <-- AQUÍ ESTÁ EL REBELDE. Este paréntesis cierra el AppBar correctamente.
       body: provider.state == LoadingState.loading
           ? const Center(
               child: Column(
@@ -51,7 +56,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
 class _HomeContent extends StatelessWidget {
   final ColorScheme colorScheme;
   const _HomeContent({required this.colorScheme});

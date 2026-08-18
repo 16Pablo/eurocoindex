@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/app_provider.dart';
@@ -26,7 +27,7 @@ class EuroCoinDexApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system, // automático según el sistema
-      home: const MainScreen(),
+      home: const SplashScreen(),
     );
   }
 }
