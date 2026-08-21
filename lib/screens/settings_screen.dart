@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/app_provider.dart';
+import 'legal_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -33,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lastUpdate = await provider.getLastUpdate();
     if (!mounted) return;
     setState(() {
-      _appVersion = info.version;
+      _appVersion = '${info.version}+${info.buildNumber}';
       _lastUpdate = lastUpdate;
     });
   }
@@ -129,6 +130,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.info_outline),
             title: const Text('EuroCoinDex'),
             subtitle: Text('Versión $_appVersion'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LegalScreen()),
+            ),
           ),
           const Divider(indent: 56),
           ListTile(
@@ -165,12 +171,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final provider = context.read<AppProvider>();
       final file = await provider.exportCollection();
       if (!mounted) return;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: 'Mi colección EuroCoinDex',
-          subject: 'EuroCoinDex - Copia de seguridad',
-        ),
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Mi colección EuroCoinDex',
+        subject: 'EuroCoinDex - Copia de seguridad',
       );
     } catch (e) {
       if (!mounted) return;
