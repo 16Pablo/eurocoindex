@@ -28,12 +28,8 @@ return DynamicColorBuilder(
           debugShowCheckedModeBanner: false,
           
           // 3. Aplicamos los colores dinámicos al tema
-          theme: AppTheme.light.copyWith(
-            colorScheme: lightDynamic?.harmonized() ?? AppTheme.light.colorScheme,
-          ),
-          darkTheme: AppTheme.dark.copyWith(
-            colorScheme: darkDynamic?.harmonized() ?? AppTheme.dark.colorScheme,
-          ),
+          theme: AppTheme.light(lightDynamic?.harmonized()),
+          darkTheme: AppTheme.dark(darkDynamic?.harmonized()),
           
           themeMode: ThemeMode.system,
           home: const SplashScreen(),

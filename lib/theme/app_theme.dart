@@ -3,129 +3,133 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  static const Color _primaryColor = Color(0xFF1B6E8F);
-  static const Color _primaryDark = Color(0xFF0D4F6B);
-  static const Color _primaryLight = Color(0xFF3B90B5);
-  static const Color _accent = Color(0xFF4DB8DC);
+  // Semilla de color por defecto: se usa solo si el dispositivo no soporta
+  // color dinámico (Android <12) o mientras dynamic_color aún no ha resuelto.
+  static const Color _seedColor = Color(0xFF1B6E8F);
 
-  static ThemeData get light => ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _primaryColor,
+  // ── Tema claro ────────────────────────────────────────────────────────────
+  // Acepta un ColorScheme dinámico ya "harmonized"; si es null, cae en la
+  // semilla propia de la app.
+  static ThemeData light([ColorScheme? dynamicScheme]) {
+    final scheme = dynamicScheme ??
+        ColorScheme.fromSeed(
+          seedColor: _seedColor,
           brightness: Brightness.light,
-          primary: _primaryColor,
-          secondary: _accent,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: _primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          selectedItemColor: _primaryColor,
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          type: BottomNavigationBarType.fixed,
-        ),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: _primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: _primaryLight.withValues(alpha: 0.15),
-          selectedColor: _primaryColor,
-          labelStyle: const TextStyle(fontSize: 13),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide:
-                const BorderSide(color: _primaryColor, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16, vertical: 12),
-        ),
-      );
+        );
 
-  static ThemeData get dark => ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _primaryColor,
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          color: scheme.onPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: scheme.primary,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: scheme.surface,
+        type: BottomNavigationBarType.fixed,
+      ),
+      cardTheme: CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: scheme.primaryContainer.withValues(alpha: 0.5),
+        selectedColor: scheme.primary,
+        labelStyle: const TextStyle(fontSize: 13),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: scheme.primary, width: 2),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
+  }
+
+  // ── Tema oscuro ───────────────────────────────────────────────────────────
+  static ThemeData dark([ColorScheme? dynamicScheme]) {
+    final scheme = dynamicScheme ??
+        ColorScheme.fromSeed(
+          seedColor: _seedColor,
           brightness: Brightness.dark,
-          primary: _accent,
-          secondary: _primaryLight,
-          surface: const Color(0xFF1A2A35),
+        );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: scheme.surface,
+      appBarTheme: AppBarTheme(
+        backgroundColor: scheme.surfaceContainerHighest,
+        foregroundColor: scheme.onSurface,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          color: scheme.onSurface,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
         ),
-        scaffoldBackgroundColor: const Color(0xFF0F1C24),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0D2A38),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: scheme.primary,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: scheme.surfaceContainerHighest,
+        type: BottomNavigationBarType.fixed,
+      ),
+      cardTheme: CardThemeData(
+        color: scheme.surfaceContainer,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          selectedItemColor: _accent,
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Color(0xFF0D2A38),
-          type: BottomNavigationBarType.fixed,
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        cardTheme: CardThemeData(
-          color: const Color(0xFF1A2A35),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: scheme.primaryContainer.withValues(alpha: 0.4),
+        selectedColor: scheme.primary,
+        labelStyle: TextStyle(fontSize: 13, color: scheme.onSurface),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: _primaryLight,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
-          ),
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: _primaryDark.withValues(alpha: 0.4),
-          selectedColor: _accent,
-          labelStyle: const TextStyle(
-              fontSize: 13, color: Colors.white),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20)),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: _accent, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16, vertical: 12),
-        ),
-      );
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
+  }
 }
