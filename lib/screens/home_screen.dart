@@ -93,7 +93,7 @@ class _HomeContent extends StatelessWidget {
           // Botones en columna, más compactos
           _TypeButton(
             label: 'Monedas Normales',
-            iconAsset: 'assets/icons/icon_normal.png',
+            iconAsset: 'assets/icons/icon_normal.webp',
             fallbackIcon: Icons.toll,
             collected: normalCollected,
             total: normalTotal,
@@ -107,7 +107,7 @@ class _HomeContent extends StatelessWidget {
           const SizedBox(height: 16),
           _TypeButton(
             label: 'Monedas Conmemorativas',
-            iconAsset: 'assets/icons/icon_comm.png',
+            iconAsset: 'assets/icons/icon_comm.webp',
             fallbackIcon: Icons.star_outlined,
             collected: commCollected,
             total: commTotal,
