@@ -21,6 +21,10 @@ class CountryAttributions {
 class AttributionsData {
   AttributionsData._();
 
+  /// Cambia esta URL si mueves la política de privacidad de sitio.
+  static const String privacyPolicyUrl =
+      'https://16pablo.github.io/eurocoindex/privacy-policy.html';
+
   static const String flagsNotice =
       'Las imágenes de las banderas utilizadas en la aplicación son de '
       'dominio público.';

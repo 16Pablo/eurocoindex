@@ -20,6 +20,17 @@ class LegalScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 12),
         children: [
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Política de privacidad'),
+            trailing: const Icon(Icons.open_in_new, size: 16),
+            onTap: () => launchUrl(
+              Uri.parse(AttributionsData.privacyPolicyUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          const Divider(),
+
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Column(

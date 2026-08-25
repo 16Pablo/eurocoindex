@@ -130,6 +130,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.info_outline),
             title: const Text('EuroCoinDex'),
             subtitle: Text('Versión $_appVersion'),
+          ),
+          const Divider(indent: 56),
+          ListTile(
+            leading: const Icon(Icons.policy_outlined),
+            title: const Text('Licencias y privacidad'),
+            subtitle: const Text('Créditos, fuentes de datos y política de privacidad'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(
               context,
