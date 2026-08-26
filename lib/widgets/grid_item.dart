@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/coin_image.dart';
 
 class GridItem extends StatelessWidget {
-  final String label;
+  final String? label;
   final String? imageFilename;
   final CoinImageType imageType;
   final int? collected;
@@ -12,7 +12,7 @@ class GridItem extends StatelessWidget {
 
   const GridItem({
     super.key,
-    required this.label,
+    this.label,
     this.imageFilename,
     this.imageType = CoinImageType.flag,
     this.collected,
@@ -45,16 +45,17 @@ class GridItem extends StatelessWidget {
                 height: 48,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(height: 8),
-              // Etiqueta
-              Text(
-                label,
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              if (label != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  label!,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
               // Progreso opcional
               if (hasProgress) ...[
                 const SizedBox(height: 6),

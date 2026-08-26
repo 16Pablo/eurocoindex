@@ -271,7 +271,7 @@ class _YearGrid extends StatelessWidget {
         final collected = provider.countCollected(coins);
 
         return GridItem(
-          label: '$year',
+          label: null,
           imageFilename: AppConstants.yearIconFilename(year),
           imageType: CoinImageType.yearIcon,
           collected: collected,
