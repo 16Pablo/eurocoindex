@@ -1,6 +1,6 @@
 name: eurocoindex
 description: EuroCoinDex - Álbum digital de monedas de euro
-version: 1.5.3+12
+version: 1.5.5+14
 publish_to: 'none'
 
 environment:

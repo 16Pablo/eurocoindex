@@ -274,6 +274,8 @@ class _YearGrid extends StatelessWidget {
           label: null,
           imageFilename: AppConstants.yearIconFilename(year),
           imageType: CoinImageType.yearIcon,
+          imageWidth: 100,
+          imageHeight: 70,
           collected: collected,
           total: coins.length,
           onTap: () => Navigator.push(

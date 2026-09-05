@@ -9,6 +9,8 @@ class GridItem extends StatelessWidget {
   final int? collected;
   final int? total;
   final VoidCallback onTap;
+  final double imageWidth;
+  final double imageHeight;
 
   const GridItem({
     super.key,
@@ -18,6 +20,8 @@ class GridItem extends StatelessWidget {
     this.collected,
     this.total,
     required this.onTap,
+    this.imageWidth = 72,
+    this.imageHeight = 48,
   });
 
   @override
@@ -41,8 +45,8 @@ class GridItem extends StatelessWidget {
               CoinImage(
                 filename: imageFilename,
                 type: imageType,
-                width: 72,
-                height: 48,
+                width: imageWidth,
+                height: imageHeight,
                 fit: BoxFit.contain,
               ),
               if (label != null) ...[

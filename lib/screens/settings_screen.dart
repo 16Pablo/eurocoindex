@@ -34,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lastUpdate = await provider.getLastUpdate();
     if (!mounted) return;
     setState(() {
-      _appVersion = '${info.version}+${info.buildNumber}';
+      _appVersion = info.version;
       _lastUpdate = lastUpdate;
     });
   }

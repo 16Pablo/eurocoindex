@@ -153,18 +153,17 @@ class _TypeButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
           child: Row(
             children: [
               // Icono
               Image.asset(
                 iconAsset,
-                width: 48,
-                height: 48,
+                width: 84,
+                height: 84,
                 errorBuilder: (_, __, ___) =>
-                    Icon(fallbackIcon, size: 48, color: colorScheme.primary),
-              ),
-              const SizedBox(width: 16),
+                    Icon(fallbackIcon, size: 84, color: colorScheme.primary),
+              ),              const SizedBox(width: 16),
               // Texto y progreso
               Expanded(
                 child: Column(
