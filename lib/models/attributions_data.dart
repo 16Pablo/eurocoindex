@@ -111,6 +111,7 @@ class AttributionsData {
     CountryAttributions('Irlanda', [
       AttributionEntry(
           'Central Bank of Ireland', 'https://www.centralbank.ie/'),
+      AttributionEntry('Collector Coins Ireland', 'https://collectorcoins.ie/'),
     ]),
     CountryAttributions('Italia', [
       AttributionEntry("Banca d'Italia", 'https://www.bancaditalia.it/'),
