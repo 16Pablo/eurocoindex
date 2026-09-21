@@ -235,7 +235,7 @@ class AppProvider extends ChangeNotifier {
         await _coinsService.clearImageCache();
       }
       final results = await Future.wait([
-        _coinsService.loadCoins(),
+        _coinsService.loadCoins(forceRefresh: clearImageCache),
         _collectionService.getCollectedIds(),
       ]);
       _allCoins = results[0] as List<Coin>;
@@ -260,4 +260,12 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<DateTime?> getLastUpdate() => _coinsService.getLastUpdate();
+  
+  Future<bool> checkForRemoteUpdate() => _coinsService.hasRemoteUpdate();
+
+  Future<bool> getCheckUpdatesOnStart() =>
+      _coinsService.getCheckUpdatesOnStartPref();
+
+  Future<void> setCheckUpdatesOnStart(bool value) =>
+      _coinsService.setCheckUpdatesOnStartPref(value);
 }
