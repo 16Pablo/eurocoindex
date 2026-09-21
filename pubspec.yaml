@@ -1,6 +1,6 @@
 name: eurocoindex
 description: EuroCoinDex - Álbum digital de monedas de euro
-version: 1.5.5+14
+version: 1.6.0+15
 publish_to: 'none'
 
 environment:
@@ -23,6 +23,7 @@ dependencies:
 
   # Imágenes con caché
   cached_network_image: ^3.3.1
+  flutter_cache_manager: any
 
   # CSV parsing
   csv: ^8.0.0
