@@ -9,12 +9,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_constants.dart';
 import '../models/coin.dart';
+import 'app_cache_manager.dart';
 
 class CoinsService {
   static const String _lastUpdateKey = 'csv_last_update';
 
-  /// Carga las monedas: primero intenta GitHub, si falla usa caché local
-  Future<List<Coin>> loadCoins() async {
+  /// Carga las monedas.
+  ///
+  /// Por defecto (arranque normal) prioriza la caché local y no toca la
+  /// red, salvo que no exista ninguna caché aún (primera instalación).
+  /// Pasa [forceRefresh]=true solo al pulsar "Actualizar catálogo".
+  Future<List<Coin>> loadCoins({bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      final cached = await _loadCache();
+      if (cached != null) return _parseCsv(cached);
+    }
+
     try {
       final csv = await _fetchFromGitHub();
       await _saveCache(csv);
@@ -29,42 +39,18 @@ class CoinsService {
     }
   }
 
-  /// Borra la caché de imágenes de cached_network_image
-  /// Se llama al actualizar el catálogo para forzar la descarga de imágenes nuevas
+  /// Borra la caché de imágenes. Se llama al actualizar el catálogo para
+  /// forzar la descarga de imágenes nuevas o modificadas.
   Future<void> clearImageCache() async {
     try {
-      final cacheDir = await getTemporaryDirectory();
-      final dir = Directory(cacheDir.path);
-      if (await dir.exists()) {
-        // Eliminar archivos de caché de imágenes (cached_network_image
-        // guarda las imágenes en el directorio temporal con prefijo libCachedImageData)
-        await for (final entity in dir.list()) {
-          if (entity is File) {
-            final name = entity.path.split('/').last;
-            if (name.startsWith('libCachedImageData') ||
-                name.endsWith('.webp') ||
-                name.endsWith('.png') ||
-                name.endsWith('.jpg')) {
-              try {
-                await entity.delete();
-              } catch (_) {}
-            }
-          } else if (entity is Directory) {
-            final dirName = entity.path.split('/').last;
-            if (dirName.contains('libCachedImageData') ||
-                dirName.contains('cache')) {
-              try {
-                await entity.delete(recursive: true);
-              } catch (_) {}
-            }
-          }
-        }
-      }
+      await AppCacheManager.instance.emptyCache();
       debugPrint('Caché de imágenes borrada');
     } catch (e) {
       debugPrint('Error borrando caché de imágenes: $e');
     }
   }
+  
+  static const String _etagKey = 'csv_etag';
 
   /// Descarga el CSV desde GitHub
   Future<String> _fetchFromGitHub() async {
@@ -73,9 +59,45 @@ class CoinsService {
       const Duration(seconds: 15),
     );
     if (response.statusCode == 200) {
+      final etag = response.headers['etag'];
+      if (etag != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_etagKey, etag);
+      }
       return utf8.decode(response.bodyBytes);
     }
     throw HttpException('HTTP ${response.statusCode}');
+  }
+
+  /// Comprobación ligera (sin descargar el CSV) de si hay una versión
+  /// nueva en GitHub, comparando la cabecera ETag con la guardada la
+  /// última vez que se actualizó con éxito.
+  Future<bool> hasRemoteUpdate() async {
+    try {
+      final response = await http
+          .head(Uri.parse(AppConstants.csvUrl))
+          .timeout(const Duration(seconds: 8));
+      final remoteEtag = response.headers['etag'];
+      if (remoteEtag == null) return false;
+
+      final prefs = await SharedPreferences.getInstance();
+      final savedEtag = prefs.getString(_etagKey);
+      return savedEtag != null && savedEtag != remoteEtag;
+    } catch (_) {
+      return false; // sin conexión: no molestamos con un prompt
+    }
+  }
+
+  static const String _checkOnStartKey = 'check_updates_on_start';
+
+  Future<bool> getCheckUpdatesOnStartPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_checkOnStartKey) ?? false;
+  }
+
+  Future<void> setCheckUpdatesOnStartPref(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_checkOnStartKey, value);
   }
 
   /// Parsea el texto CSV a lista de monedas
