@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../models/app_constants.dart';
+import '../services/app_cache_manager.dart';
 
 enum CoinImageType { coin, flag, value, yearIcon }
 
@@ -68,9 +69,10 @@ class CoinImage extends StatelessWidget {
     );
 
     if (url == null) return errorWidget;
-
+    
     Widget img = CachedNetworkImage(
       imageUrl: url,
+      cacheManager: AppCacheManager.instance,
       width: width,
       height: height,
       fit: fit,
