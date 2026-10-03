@@ -20,6 +20,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _appVersion = '';
   DateTime? _lastUpdate;
+  bool _checkOnStart = false;
 
   @override
   void initState() {
@@ -125,12 +126,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => _refreshData(),
           ),
 
-          const _SectionHeader('Acerca de'),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('EuroCoinDex'),
-            subtitle: Text('Versión $_appVersion'),
-          ),
           const Divider(indent: 56),
           ListTile(
             leading: const Icon(Icons.policy_outlined),
@@ -142,6 +137,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               MaterialPageRoute(builder: (_) => const LegalScreen()),
             ),
           ),
+          
+          const _SectionHeader('Acerca de'),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('EuroCoinDex'),
+            subtitle: Text('Versión $_appVersion'),
+          ),
+
           const Divider(indent: 56),
           ListTile(
             leading:
