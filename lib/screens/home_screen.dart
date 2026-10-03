@@ -4,8 +4,54 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import 'filter_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _checkedThisSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeCheckUpdate());
+  }
+
+  Future<void> _maybeCheckUpdate() async {
+    if (_checkedThisSession) return;
+    _checkedThisSession = true;
+
+    final provider = context.read<AppProvider>();
+    final enabled = await provider.getCheckUpdatesOnStart();
+    if (!enabled || !mounted) return;
+
+    final hasUpdate = await provider.checkForRemoteUpdate();
+    if (!hasUpdate || !mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Catálogo actualizado disponible'),
+        content: const Text(
+            'Hay monedas o imágenes nuevas en el catálogo. ¿Quieres descargarlas ahora?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Ahora no')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Actualizar')),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await context.read<AppProvider>().loadData(clearImageCache: true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,28 +60,23 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: ShaderMask(
-        blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) {
-          return const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              Color(0xFFFFCC00), // <-- Pon aquí tu COLOR IZQUIERDO de la splash
-              Color(0xFF3388FF), // <-- Pon aquí tu COLOR DERECHO de la splash
-            ],
-          ).createShader(bounds);
-        },
-        child: const Text(
-          'EuroCoinDex',
-          style: TextStyle(
-            fontFamily: 'EuroCoinDexFont', // Tu fuente personalizada
-            fontWeight: FontWeight.bold,
-            fontSize: 14, // Puedes subir o bajar este número si se ve muy grande o pequeño
-          ),
-        ),
+        title: const Text('EuroCoinDex'),
+        actions: [
+          if (provider.isLoaded)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Text(
+                  '${provider.countCollected(provider.allCoins.where((c) => c.emitida).toList())}/${provider.allCoins.where((c) => c.emitida).length}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14),
+                ),
+              ),
+            ),
+        ],
       ),
-    ), // <-- AQUÍ ESTÁ EL REBELDE. Este paréntesis cierra el AppBar correctamente.
       body: provider.state == LoadingState.loading
           ? const Center(
               child: Column(
@@ -56,6 +97,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+
 class _HomeContent extends StatelessWidget {
   final ColorScheme colorScheme;
   const _HomeContent({required this.colorScheme});
@@ -90,7 +132,6 @@ class _HomeContent extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 24),
-          // Botones en columna, más compactos
           _TypeButton(
             label: 'Monedas Normales',
             iconAsset: 'assets/icons/icon_normal.webp',
@@ -156,15 +197,14 @@ class _TypeButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
           child: Row(
             children: [
-              // Icono
               Image.asset(
                 iconAsset,
                 width: 84,
                 height: 84,
                 errorBuilder: (_, __, ___) =>
                     Icon(fallbackIcon, size: 84, color: colorScheme.primary),
-              ),              const SizedBox(width: 16),
-              // Texto y progreso
+              ),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +212,7 @@ class _TypeButton extends StatelessWidget {
                     Text(
                       label,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
