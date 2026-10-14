@@ -8,6 +8,7 @@ import '../models/app_constants.dart';
 import '../models/coin.dart';
 import '../providers/app_provider.dart';
 import '../widgets/coin_image.dart';
+import '../services/app_cache_manager.dart';
 
 class CoinDetailScreen extends StatelessWidget {
   final Coin coin;
@@ -292,6 +293,7 @@ class _ImageGalleryState extends State<_ImageGallery> {
                 itemCount: widget.images.length,
                 onPageChanged: (i) => setState(() => _current = i),
                 itemBuilder: (_, i) => CachedNetworkImage(
+                  cacheManager: AppCacheManager.instance,
                   imageUrl: widget.images[i],
                   fit: BoxFit.contain,
                 ),
@@ -344,8 +346,10 @@ class _ImageGalleryState extends State<_ImageGallery> {
             itemCount: widget.images.length,
             pageController: PageController(initialPage: initial),
             builder: (_, i) => PhotoViewGalleryPageOptions(
-              imageProvider:
-                  CachedNetworkImageProvider(widget.images[i]),
+              imageProvider: CachedNetworkImageProvider(
+                widget.images[i],
+                cacheManager: AppCacheManager.instance,
+              ),
               minScale: PhotoViewComputedScale.contained,
               maxScale: PhotoViewComputedScale.covered * 4,
             ),

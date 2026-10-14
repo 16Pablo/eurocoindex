@@ -229,11 +229,6 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Si se pide actualización manual, borrar caché de imágenes
-      // para que las imágenes nuevas se descarguen correctamente
-      if (clearImageCache) {
-        await _coinsService.clearImageCache();
-      }
       final results = await Future.wait([
         _coinsService.loadCoins(forceRefresh: clearImageCache),
         _collectionService.getCollectedIds(),

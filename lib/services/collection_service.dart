@@ -96,28 +96,37 @@ class CollectionService {
   /// Importa una colección desde un CSV exportado previamente
   /// Devuelve el número de monedas importadas
   Future<int> importCollection(File file) async {
-    final content = await file.readAsString(encoding: utf8);
-    final lines = content.split('\n');
-    if (lines.isEmpty) return 0;
-
-    final db = await database;
-    // Limpiar colección actual antes de importar
-    await db.delete(AppConstants.collectionTable);
-
-    int count = 0;
-    for (final line in lines.skip(1)) {
+    // 1) Leer y validar TODO el archivo antes de tocar la colección actual
+    final entries = <int, String>{};
+    for (final line in content.split('\n').skip(1)) {
       final parts = line.split(',');
       if (parts.isEmpty || parts[0].trim().isEmpty) continue;
       final id = int.tryParse(parts[0].trim());
       if (id == null) continue;
-      final addedAt =
-          parts.length > 1 ? parts[1].trim() : DateTime.now().toIso8601String();
-      await db.insert(AppConstants.collectionTable,
-          {'coin_id': id, 'added_at': addedAt},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      count++;
+      entries[id] = parts.length > 1 && parts[1].trim().isNotEmpty
+          ? parts[1].trim()
+          : DateTime.now().toIso8601String();
     }
-    return count;
+    if (entries.isEmpty) {
+      throw const FormatException(
+          'El archivo no contiene monedas válidas. Tu colección no se ha modificado.');
+    }
+
+    // 2) Sustituir la colección en una sola transacción
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(AppConstants.collectionTable);
+      final batch = txn.batch();
+      entries.forEach((id, addedAt) {
+        batch.insert(
+          AppConstants.collectionTable,
+          {'coin_id': id, 'added_at': addedAt},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      });
+      await batch.commit(noResult: true);
+    });
+    return entries.length;
   }
 
   /// Número total de monedas en la colección

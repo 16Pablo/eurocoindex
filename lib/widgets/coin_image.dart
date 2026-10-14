@@ -62,7 +62,7 @@ class CoinImage extends StatelessWidget {
         borderRadius: borderRadius,
       ),
       child: Icon(
-        type == CoinImageType.flag ? Icons.flag : type == CoinImageType.flag ? Icons.flag : Icons.euro,
+        type == CoinImageType.flag ? Icons.flag : Icons.euro,
         color: isDark ? Colors.grey[600] : Colors.grey[400],
         size: (width ?? 40) * 0.5,
       ),

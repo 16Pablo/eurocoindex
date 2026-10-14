@@ -29,6 +29,9 @@ class CoinsService {
       final csv = await _fetchFromGitHub();
       await _saveCache(csv);
       await _saveLastUpdate();
+      // Solo si el CSV se ha descargado bien se marcan las imágenes para
+      // revisión; sin conexión no se toca nada.
+      if (forceRefresh) await invalidateImageCache();
       return _parseCsv(csv);
     } catch (e) {
       debugPrint('No se pudo descargar CSV: $e. Usando caché local.');
@@ -39,14 +42,14 @@ class CoinsService {
     }
   }
 
-  /// Borra la caché de imágenes. Se llama al actualizar el catálogo para
-  /// forzar la descarga de imágenes nuevas o modificadas.
-  Future<void> clearImageCache() async {
+  /// Marca las imágenes guardadas para que se vuelvan a comprobar contra
+  /// GitHub: solo se descargan las que hayan cambiado. No borra nada.
+  Future<void> invalidateImageCache() async {
     try {
-      await AppCacheManager.instance.emptyCache();
-      debugPrint('Caché de imágenes borrada');
+      await AppCacheManager.invalidateAll();
+      debugPrint('Imágenes marcadas para revisión');
     } catch (e) {
-      debugPrint('Error borrando caché de imágenes: $e');
+      debugPrint('Error marcando la caché de imágenes: $e');
     }
   }
   
@@ -82,7 +85,9 @@ class CoinsService {
 
       final prefs = await SharedPreferences.getInstance();
       final savedEtag = prefs.getString(_etagKey);
-      return savedEtag != null && savedEtag != remoteEtag;
+      // Si nunca se guardó un ETag (catálogo descargado con una versión
+      // anterior de la app) se ofrece actualizar una vez para dejarlo guardado.
+      return savedEtag != remoteEtag;
     } catch (_) {
       return false; // sin conexión: no molestamos con un prompt
     }
@@ -102,21 +107,8 @@ class CoinsService {
 
   /// Parsea el texto CSV a lista de monedas
   List<Coin> _parseCsv(String csvText) {
-    final sep = csvText.contains(';') ? ';' : ',';
-
-    final rows = Csv(
-      fieldDelimiter: ',',
-    ).decode(csvText);
-
-    List<List<dynamic>> parsed;
-    if (sep == ';') {
-      parsed = csvText
-          .split('\n')
-          .map((line) => line.split(';').map((e) => e.trim()).toList())
-          .toList();
-    } else {
-      parsed = rows;
-    }
+    // Csv detecta solo el separador (; o ,) y respeta las comillas.
+    final parsed = Csv().decode(csvText);
 
     if (parsed.isEmpty) return [];
 

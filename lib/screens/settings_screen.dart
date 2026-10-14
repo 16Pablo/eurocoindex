@@ -125,6 +125,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 : const Text('Nunca actualizado'),
             onTap: () => _refreshData(),
           ),
+                    const Divider(indent: 56),
+          SwitchListTile(
+            secondary: const Icon(Icons.notifications_active_outlined),
+            title: const Text('Comprobar actualizaciones al abrir'),
+            subtitle: const Text(
+                'Avisa si hay monedas o imágenes nuevas; no descarga nada hasta que aceptes'),
+            value: _checkOnStart,
+            onChanged: (value) async {
+              setState(() => _checkOnStart = value);
+              await provider.setCheckUpdatesOnStart(value);
+            },
+          ),
 
           const Divider(indent: 56),
           ListTile(
@@ -153,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle:
                 const Text('Si te es útil, considera una donación'),
             onTap: () => launchUrl(
-              Uri.parse('https://www.paypal.com/paypalme/my/profile'),
+              Uri.parse('https://www.paypal.me/16pablo'),
               mode: LaunchMode.externalApplication,
             ),
           ),
@@ -180,10 +192,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final provider = context.read<AppProvider>();
       final file = await provider.exportCollection();
       if (!mounted) return;
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Mi colección EuroCoinDex',
-        subject: 'EuroCoinDex - Copia de seguridad',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'Mi colección EuroCoinDex',
+          subject: 'EuroCoinDex - Copia de seguridad',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -232,12 +246,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _refreshData() async {
     final provider = context.read<AppProvider>();
+    final before = await provider.getLastUpdate();
     await provider.loadData(clearImageCache: true);
     if (!mounted) return;
-    final lastUpdate = await provider.getLastUpdate();
+    final after = await provider.getLastUpdate();
     if (!mounted) return;
-    setState(() => _lastUpdate = lastUpdate);
-    _showSnack('Catálogo e imágenes actualizados correctamente');
+    // La fecha solo cambia si el catálogo se ha descargado de verdad
+    final updated = after != null && after != before;
+    setState(() => _lastUpdate = after);
+    _showSnack(
+      updated
+          ? 'Catálogo actualizado. Las imágenes modificadas se descargarán al verlas'
+          : 'No se pudo actualizar (¿sin conexión?). Se mantiene el catálogo guardado',
+      isError: !updated,
+    );
   }
 
   void _showSnack(String msg, {bool isError = false}) {
