@@ -97,6 +97,7 @@ class CollectionService {
   /// Devuelve el número de monedas importadas
   Future<int> importCollection(File file) async {
     // 1) Leer y validar TODO el archivo antes de tocar la colección actual
+    final content = await file.readAsString(encoding: utf8);
     final entries = <int, String>{};
     for (final line in content.split('\n').skip(1)) {
       final parts = line.split(',');
