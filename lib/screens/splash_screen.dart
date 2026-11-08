@@ -30,11 +30,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
 
     _controller.forward().then((_) {
-      _controller.forward().then((_) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen()), 
-        );
-      });
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
     });
   }
 
@@ -78,11 +77,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    // Detecta automáticamente si el móvil está en Modo Oscuro o Claro
-    final isDarkMode = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-
     return Scaffold(
-      // Fondo dinámico según el tema del dispositivo
       backgroundColor: const Color(0xFF1B6E8F),
       body: Center(
         child: ShaderMask(
