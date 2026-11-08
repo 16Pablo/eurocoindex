@@ -163,10 +163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Código fuente'),
             subtitle:
                 const Text('github.com/16Pablo/eurocoindex'),
-            onTap: () => launchUrl(
-              Uri.parse('https://github.com/16Pablo/eurocoindex'),
-              mode: LaunchMode.externalApplication,
-            ),
+            onTap: () => _openExternalUrl('https://github.com/16Pablo/eurocoindex'),
           ),
 
           const SizedBox(height: 32),
@@ -248,6 +245,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : 'No se pudo actualizar (¿sin conexión?). Se mantiene el catálogo guardado',
       isError: !updated,
     );
+  }
+
+  Future<void> _openExternalUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    try {
+      final launched =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        _showSnack('No se pudo abrir el enlace en el navegador', isError: true);
+      }
+    } catch (_) {
+      if (mounted) {
+        _showSnack('No se pudo abrir el enlace en el navegador', isError: true);
+      }
+    }
   }
 
   void _showSnack(String msg, {bool isError = false}) {

@@ -24,10 +24,7 @@ class LegalScreen extends StatelessWidget {
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Política de privacidad'),
             trailing: const Icon(Icons.open_in_new, size: 16),
-            onTap: () => launchUrl(
-              Uri.parse(AttributionsData.privacyPolicyUrl),
-              mode: LaunchMode.externalApplication,
-            ),
+            onTap: () => _openUrl(context, AttributionsData.privacyPolicyUrl),
           ),
           const Divider(),
 
@@ -90,6 +87,31 @@ class _SectionHeader extends StatelessWidget {
       );
 }
 
+Future<void> _openUrl(BuildContext context, String url) async {
+  final uri = Uri.tryParse(url);
+  if (uri == null) return;
+  try {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir el enlace en el navegador'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo abrir el enlace en el navegador'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+}
+
 // ── Fila de un organismo con enlace ─────────────────────────────────────────
 
 class _SourceTile extends StatelessWidget {
@@ -102,10 +124,7 @@ class _SourceTile extends StatelessWidget {
       dense: true,
       title: Text(source.name, style: const TextStyle(fontSize: 14)),
       trailing: const Icon(Icons.open_in_new, size: 16),
-      onTap: () => launchUrl(
-        Uri.parse(source.url),
-        mode: LaunchMode.externalApplication,
-      ),
+      onTap: () => _openUrl(context, source.url),
     );
   }
 }
