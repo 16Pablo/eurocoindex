@@ -159,18 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const Divider(indent: 56),
           ListTile(
-            leading:
-                const Icon(Icons.favorite, color: Colors.red),
-            title: const Text('Apoya el proyecto'),
-            subtitle:
-                const Text('Si te es útil, considera una donación'),
-            onTap: () => launchUrl(
-              Uri.parse('https://www.paypal.me/16pablo'),
-              mode: LaunchMode.externalApplication,
-            ),
-          ),
-          const Divider(indent: 56),
-          ListTile(
             leading: const Icon(Icons.code),
             title: const Text('Código fuente'),
             subtitle:
