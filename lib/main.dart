@@ -9,14 +9,46 @@ import 'theme/app_theme.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 1. Captura de errores síncronos del framework de Flutter
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     debugPrint('FlutterError: ${details.exceptionAsString()}');
   };
 
+  // 2. Captura de errores asíncronos no controlados del hilo de la plataforma
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('Uncaught error: $error');
-    return true;
+    return true; // Evita que la app se cierre bruscamente
+  };
+
+  // 3. Sustituye la pantalla gris de error en producción por una vista amigable
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      color: Colors.transparent,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.info_outline, size: 48, color: Colors.grey),
+              const SizedBox(height: 12),
+              const Text(
+                'No se pudo cargar este elemento',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Por favor, regresa a la pantalla anterior o reintenta.',
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   };
 
   runApp(
