@@ -1,13 +1,24 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_provider.dart';
-import 'screens/main_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exceptionAsString()}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught error: $error');
+    return true;
+  };
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppProvider()..loadData(),

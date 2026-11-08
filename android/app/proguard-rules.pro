@@ -1,4 +1,4 @@
-## Flutter wrapper
+## Flutter
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }
 -keep class io.flutter.util.**  { *; }
@@ -7,6 +7,13 @@
 -keep class io.flutter.plugins.**  { *; }
 -dontwarn io.flutter.embedding.**
 
-## SQLite
--keep class net.sqlcipher.** { *; }
--keep class net.sqlcipher.database.** { *; }
+## App & Plugins
+-keep class com.pablo.eurocoindex.** { *; }
+-keep class com.tekartik.sqflite.** { *; }
+-keep class dev.fluttercommunity.** { *; }
+-keep class com.mr.flutter.plugin.filepicker.** { *; }
+
+## Supresión de advertencias en optimización R8
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
