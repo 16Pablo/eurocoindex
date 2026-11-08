@@ -237,7 +237,8 @@ class AppProvider extends ChangeNotifier {
       _collectedIds = results[1] as Set<int>;
       _state = LoadingState.loaded;
     } catch (e) {
-      _errorMessage = e.toString();
+      final raw = e.toString();
+      _errorMessage = raw.startsWith('Exception: ') ? raw.substring(11) : raw;
       _state = LoadingState.error;
     }
     notifyListeners();

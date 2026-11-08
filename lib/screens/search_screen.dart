@@ -41,6 +41,35 @@ class _SearchScreenState extends State<SearchScreen> {
         ? provider.applyFilter(_results!, _filter)
         : null;
 
+    if (provider.state == LoadingState.error) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Buscar')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.cloud_off_outlined, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Catálogo no disponible',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Descarga el catálogo desde la pestaña Inicio con conexión a internet para poder buscar monedas.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Buscar')),
       body: Column(

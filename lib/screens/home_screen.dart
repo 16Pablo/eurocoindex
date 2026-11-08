@@ -256,26 +256,61 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.wifi_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text('No se pudieron cargar los datos',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(message,
-                style: const TextStyle(color: Colors.grey),
-                textAlign: TextAlign.center),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.cloud_download_outlined,
+                size: 64,
+                color: colorScheme.primary,
+              ),
+            ),
             const SizedBox(height: 24),
+            Text(
+              'Descarga inicial requerida',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'EuroCoinDex necesita conexión a internet la primera vez para descargar la base de datos de monedas y preparar tu álbum digital.\n\nUna vez descargada, podrás usar toda la aplicación completamente sin conexión.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    height: 1.4,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            if (message.isNotEmpty &&
+                message != 'Se necesita conexión a internet para descargar el catálogo por primera vez.') ...[
+              const SizedBox(height: 16),
+              Text(
+                message,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 28),
             FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Descargar catálogo'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
           ],
         ),

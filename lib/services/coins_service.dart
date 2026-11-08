@@ -38,7 +38,7 @@ class CoinsService {
       final cached = await _loadCache();
       if (cached != null) return _parseCsv(cached);
       throw Exception(
-          'No hay conexión a internet y no hay datos almacenados localmente.');
+          'Se necesita conexión a internet para descargar el catálogo por primera vez.');
     }
   }
 
