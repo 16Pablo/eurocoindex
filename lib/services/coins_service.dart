@@ -22,7 +22,7 @@ class CoinsService {
   Future<List<Coin>> loadCoins({bool forceRefresh = false}) async {
     if (!forceRefresh) {
       final cached = await _loadCache();
-      if (cached != null) return _parseCsv(cached);
+      if (cached != null) return compute(_parseCsv, cached);
     }
 
     try {
@@ -32,11 +32,11 @@ class CoinsService {
       // Solo si el CSV se ha descargado bien se marcan las imágenes para
       // revisión; sin conexión no se toca nada.
       if (forceRefresh) await invalidateImageCache();
-      return _parseCsv(csv);
+      return compute(_parseCsv, csv);
     } catch (e) {
       debugPrint('No se pudo descargar CSV: $e. Usando caché local.');
       final cached = await _loadCache();
-      if (cached != null) return _parseCsv(cached);
+      if (cached != null) return compute(_parseCsv, cached);
       throw Exception(
           'Se necesita conexión a internet para descargar el catálogo por primera vez.');
     }
@@ -105,8 +105,8 @@ class CoinsService {
     await prefs.setBool(_checkOnStartKey, value);
   }
 
-  /// Parsea el texto CSV a lista de monedas
-  List<Coin> _parseCsv(String csvText) {
+  /// Parsea el texto CSV a lista de monedas en un isolate de segundo plano
+  static List<Coin> _parseCsv(String csvText) {
     // Csv detecta solo el separador (; o ,) y respeta las comillas.
     final parsed = Csv().decode(csvText);
 
