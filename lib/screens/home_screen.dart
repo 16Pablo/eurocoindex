@@ -111,7 +111,7 @@ class _HomeContent extends StatelessWidget {
     final commCollected = provider.countCollected(provider.commCoins);
     final commTotal = provider.commCoins.length;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,6 +187,8 @@ class _TypeButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final progress = total > 0 ? collected / total : 0.0;
+    // Icono adaptable: más pequeño en pantallas estrechas (pantalla dividida)
+    final iconSize = MediaQuery.of(context).size.shortestSide < 360 ? 56.0 : 84.0;
 
     return Card(
       elevation: 3,
@@ -194,15 +196,15 @@ class _TypeButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: Row(
             children: [
               Image.asset(
                 iconAsset,
-                width: 84,
-                height: 84,
+                width: iconSize,
+                height: iconSize,
                 errorBuilder: (_, __, ___) =>
-                    Icon(fallbackIcon, size: 84, color: colorScheme.primary),
+                    Icon(fallbackIcon, size: iconSize, color: colorScheme.primary),
               ),
               const SizedBox(width: 16),
               Expanded(
