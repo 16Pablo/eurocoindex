@@ -8,6 +8,8 @@ import 'package:sqflite/sqflite.dart';
 import '../models/app_constants.dart';
 
 class CollectionService {
+  const CollectionService();
+
   static Database? _db;
 
   Future<Database> get database async {
@@ -36,7 +38,7 @@ class CollectionService {
   Future<Set<int>> getCollectedIds() async {
     final db = await database;
     final rows = await db.query(AppConstants.collectionTable,
-        columns: ['coin_id']);
+        columns: const ['coin_id']);
     return rows.map((r) => r['coin_id'] as int).toSet();
   }
 
@@ -96,7 +98,7 @@ class CollectionService {
   /// Importa una colección desde un CSV exportado previamente
   /// Devuelve el número de monedas importadas
   Future<int> importCollection(File file) async {
-    // 1) Leer y validar TODO el archivo antes de tocar la colección actual
+    // 1) Leer y validar todo el archivo antes de tocar la colección actual
     final content = await file.readAsString(encoding: utf8);
     final entries = <int, String>{};
     for (final line in content.split('\n').skip(1)) {

@@ -12,7 +12,7 @@ enum CollectionFilter { all, collected, missing }
 
 class AppProvider extends ChangeNotifier {
   final CoinsService _coinsService = CoinsService();
-  final CollectionService _collectionService = CollectionService();
+  final CollectionService _collectionService = const CollectionService();
 
   LoadingState _state = LoadingState.idle;
   String _errorMessage = '';

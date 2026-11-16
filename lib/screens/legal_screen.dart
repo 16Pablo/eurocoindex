@@ -28,22 +28,22 @@ class LegalScreen extends StatelessWidget {
           ),
           const Divider(),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(AttributionsData.flagsNotice,
-                    style: const TextStyle(fontSize: 14, height: 1.4)),
-                const SizedBox(height: 12),
+                    style: TextStyle(fontSize: 14, height: 1.4)),
+                SizedBox(height: 12),
                 Text(AttributionsData.coinsNotice,
-                    style: const TextStyle(fontSize: 14, height: 1.4)),
+                    style: TextStyle(fontSize: 14, height: 1.4)),
               ],
             ),
           ),
           const Divider(),
 
-          _SectionHeader('Unión Europea'),
+          const _SectionHeader('Unión Europea'),
           for (final source in AttributionsData.euSources)
             _SourceTile(source: source),
 
@@ -56,7 +56,7 @@ class LegalScreen extends StatelessWidget {
 
           const Divider(),
 
-          _SectionHeader('Bibliotecas de terceros'),
+          const _SectionHeader('Bibliotecas de terceros'),
           const _LicensesTile(),
 
           const SizedBox(height: 24),
