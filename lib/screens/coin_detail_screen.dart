@@ -20,6 +20,9 @@ class CoinDetailScreen extends StatelessWidget {
     final provider = context.watch<AppProvider>();
     final collected = provider.isCollected(coin.id);
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appBarForeground =
+        isDark ? colorScheme.onSurface : colorScheme.onPrimary;
 
     // Imágenes disponibles de esta moneda
     final images = [
@@ -93,7 +96,7 @@ class CoinDetailScreen extends StatelessWidget {
                       ? Icons.check_circle
                       : Icons.add_circle_outline,
                   key: ValueKey(collected),
-                  color: Colors.white,
+                  color: appBarForeground,
                   size: 28,
                 ),
               ),

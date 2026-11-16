@@ -23,6 +23,11 @@ class _FilterScreenState extends State<FilterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appBarForeground =
+        isDark ? colorScheme.onSurface : colorScheme.onPrimary;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isComm ? 'Conmemorativas' : 'Normales'),
@@ -30,7 +35,7 @@ class _FilterScreenState extends State<FilterScreen> {
           // Menú solo para secciones que lo necesitan
           if (!widget.isComm || (_isNational))
             PopupMenuButton<_FilterMode>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
+              icon: Icon(Icons.more_vert, color: appBarForeground),
               tooltip: 'Modo de visualización',
               onSelected: (mode) => setState(() => _mode = mode),
               itemBuilder: (_) => [
@@ -65,7 +70,7 @@ class _FilterScreenState extends State<FilterScreen> {
           // Menú para emisiones conjuntas
           if (widget.isComm && !_isNational)
             PopupMenuButton<_FilterMode>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
+              icon: Icon(Icons.more_vert, color: appBarForeground),
               tooltip: 'Modo de visualización',
               onSelected: (mode) => setState(() => _mode = mode),
               itemBuilder: (_) => [
@@ -394,6 +399,10 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? colorScheme.onSurface : colorScheme.onPrimary;
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -401,15 +410,15 @@ class _TabButton extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             border: selected
-                ? const Border(
-                    bottom: BorderSide(color: Colors.white, width: 3))
+                ? Border(
+                    bottom: BorderSide(color: textColor, width: 3))
                 : null,
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.white,
+                color: selected ? textColor : textColor.withValues(alpha: 0.7),
                 fontWeight:
                     selected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 13,
