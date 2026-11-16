@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
+  // Radios de forma para Material 3 Expressive
+  static const double cardRadius = 24.0;
+  static const double fieldRadius = 16.0;
+  static const double dialogRadius = 28.0;
+  static const double imageRadius = 16.0;
+
   // Semilla de color por defecto: se usa solo si el dispositivo no soporta
   // color dinámico (Android <12) o mientras dynamic_color aún no ha resuelto.
   static const Color _seedColor = Color(0xFF1B6E8F);
@@ -38,34 +44,44 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        color: scheme.surfaceContainerLow,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(cardRadius),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: const StadiumBorder(),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.primaryContainer.withValues(alpha: 0.5),
         selectedColor: scheme.primary,
         labelStyle: const TextStyle(fontSize: 13),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const StadiumBorder(),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(fieldRadius)),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(fieldRadius),
           borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(dialogRadius),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(fieldRadius),
+        ),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: <TargetPlatform, PageTransitionsBuilder>{
@@ -106,34 +122,43 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainer,
-        elevation: 2,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(cardRadius),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: const StadiumBorder(),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: scheme.primaryContainer.withValues(alpha: 0.4),
         selectedColor: scheme.primary,
         labelStyle: TextStyle(fontSize: 13, color: scheme.onSurface),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const StadiumBorder(),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(fieldRadius)),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(fieldRadius),
           borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(dialogRadius),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(fieldRadius),
+        ),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: <TargetPlatform, PageTransitionsBuilder>{

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/app_provider.dart';
+import '../theme/app_theme.dart';
 import 'filter_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -191,9 +192,8 @@ class _TypeButton extends StatelessWidget {
     final iconSize = MediaQuery.of(context).size.shortestSide < 360 ? 56.0 : 84.0;
 
     return Card(
-      elevation: 3,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),

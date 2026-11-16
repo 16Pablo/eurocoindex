@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/coin.dart';
 import '../providers/app_provider.dart';
+import '../theme/app_theme.dart';
 import '../widgets/coin_image.dart';
 
 class CoinListItem extends StatelessWidget {
@@ -21,7 +22,7 @@ class CoinListItem extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(10),
@@ -33,7 +34,7 @@ class CoinListItem extends StatelessWidget {
                 type: CoinImageType.coin,
                 width: 76,
                 height: 76,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.imageRadius),
               ),
               const SizedBox(width: 12),
               // Información

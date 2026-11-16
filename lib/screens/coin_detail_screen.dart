@@ -7,8 +7,9 @@ import 'package:provider/provider.dart';
 import '../models/app_constants.dart';
 import '../models/coin.dart';
 import '../providers/app_provider.dart';
-import '../widgets/coin_image.dart';
 import '../services/app_cache_manager.dart';
+import '../theme/app_theme.dart';
+import '../widgets/coin_image.dart';
 
 class CoinDetailScreen extends StatelessWidget {
   final Coin coin;
@@ -249,7 +250,7 @@ class _RelatedList extends StatelessWidget {
                     type: CoinImageType.coin,
                     width: 70,
                     height: 70,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTheme.imageRadius),
                   ),
                   const SizedBox(height: 4),
                   Text(
