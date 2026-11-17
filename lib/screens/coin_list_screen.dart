@@ -55,9 +55,11 @@ class _CoinListScreenState extends State<CoinListScreen> {
     coins = List.of(coins);
     if (widget.isCommemorative) {
       coins.sort((a, b) {
-        final yearCmp = a.anoInicio.compareTo(b.anoInicio);
-        if (yearCmp != 0) {
-          return provider.commCoinsNewestFirst ? -yearCmp : yearCmp;
+        final chronologyCmp = a.sortKey.compareTo(b.sortKey);
+        if (chronologyCmp != 0) {
+          return provider.commCoinsNewestFirst
+              ? -chronologyCmp
+              : chronologyCmp;
         }
         final currentOrder = _compareCoin(a, b);
         return currentOrder != 0 ? currentOrder : a.id.compareTo(b.id);
