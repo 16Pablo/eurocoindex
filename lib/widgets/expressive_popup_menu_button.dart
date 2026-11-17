@@ -31,7 +31,7 @@ class ExpressivePopupMenuButton<T> extends StatelessWidget {
       shadowColor: colors.shadow.withValues(alpha: 0.16),
       elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
       ),
       menuPadding: const EdgeInsets.symmetric(vertical: 8),
       constraints: const BoxConstraints(minWidth: 264),
@@ -80,28 +80,22 @@ class _ExpressivePopupMenuOption extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final foreground = selected ? colors.primary : colors.onSurfaceVariant;
 
-    return Ink(
-      decoration: BoxDecoration(
-        color: selected ? colors.secondaryContainer : null,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: foreground),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: foreground,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              ),
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: foreground),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: foreground,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
-          if (selected)
-            Icon(Icons.check_rounded, size: 20, color: colors.primary),
-        ],
-      ),
+        ),
+        if (selected)
+          Icon(Icons.check_rounded, size: 20, color: colors.primary),
+      ],
     );
   }
 }
