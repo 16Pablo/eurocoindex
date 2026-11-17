@@ -8,7 +8,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -18,15 +19,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500), // Duración de la animación
+      duration: const Duration(milliseconds: 900),
     );
 
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic, // Hace que empiece rápido y frene suave
+      curve: Curves.easeOutCubic,
     );
 
     _controller.forward().then((_) {
@@ -43,61 +44,42 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     super.dispose();
   }
 
-  Widget _buildAnimatedText(String initialLetter, String hiddenText) {
-    // Estilo base usando tu fuente del pubspec.yaml
-    final TextStyle estiloTexto = const TextStyle(
+  @override
+  Widget build(BuildContext context) {
+    const TextStyle textStyle = TextStyle(
       fontFamily: 'EuroCoinDexFont',
       fontSize: 42,
       fontWeight: FontWeight.bold,
-      color: Colors.white, // El color base no importa, el ShaderMask lo sobreescribe
+      color: Colors.white,
     );
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(initialLetter, style: estiloTexto),
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Opacity(
-              opacity: _animation.value,
-              child: ClipRect(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: _animation.value,
-                  child: Text(hiddenText, style: estiloTexto),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1B6E8F),
       body: Center(
-        child: ShaderMask(
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) {
-            return LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [colorIzquierdo, colorDerecho],
-            ).createShader(bounds);
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildAnimatedText('E', 'uro'),
-              const SizedBox(width: 4),
-              _buildAnimatedText('C', 'oin'),
-              const SizedBox(width: 4),
-              _buildAnimatedText('D', 'ex'),
-            ],
+        child: FadeTransition(
+          opacity: _animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1.0).animate(_animation),
+            child: ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) {
+                return LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [colorIzquierdo, colorDerecho],
+                ).createShader(bounds);
+              },
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Euro', style: textStyle),
+                  SizedBox(width: 4),
+                  Text('Coin', style: textStyle),
+                  SizedBox(width: 4),
+                  Text('Dex', style: textStyle),
+                ],
+              ),
+            ),
           ),
         ),
       ),
