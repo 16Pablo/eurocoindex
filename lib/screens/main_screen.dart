@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/slide_indexed_stack.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
@@ -14,6 +13,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final PageController _pageController = PageController();
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -22,16 +22,35 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SlideIndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          if (index != _currentIndex) {
+            setState(() => _currentIndex = index);
+          }
+        },
+        children: [
+          for (final screen in _screens) _KeepAlivePage(child: screen),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) {
-          if (i != _currentIndex) setState(() => _currentIndex = i);
+          if (i != _currentIndex) {
+            _pageController.animateToPage(
+              i,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
         },
         destinations: const [
           NavigationDestination(
@@ -52,5 +71,26 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+}
+
+class _KeepAlivePage extends StatefulWidget {
+  const _KeepAlivePage({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin<_KeepAlivePage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
