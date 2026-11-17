@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Equivalente a un [IndexedStack] con transición "fade through" (Material 3)
-/// al cambiar de hijo: la pantalla saliente se desvanece y, a continuación,
-/// la entrante aparece con un ligero escalado.
+/// Equivalente a un [IndexedStack] con transición lateral al cambiar de hijo.
 ///
 /// Todos los hijos se mantienen vivos (conservan estado y scroll), igual que
 /// en un IndexedStack. Si el sistema tiene las animaciones desactivadas, el
 /// cambio es instantáneo.
-class FadeThroughIndexedStack extends StatefulWidget {
+class SlideIndexedStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
   final Duration duration;
 
-  const FadeThroughIndexedStack({
+  const SlideIndexedStack({
     super.key,
     required this.index,
     required this.children,
@@ -20,11 +18,10 @@ class FadeThroughIndexedStack extends StatefulWidget {
   });
 
   @override
-  State<FadeThroughIndexedStack> createState() =>
-      _FadeThroughIndexedStackState();
+  State<SlideIndexedStack> createState() => _SlideIndexedStackState();
 }
 
-class _FadeThroughIndexedStackState extends State<FadeThroughIndexedStack>
+class _SlideIndexedStackState extends State<SlideIndexedStack>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late int _current;
@@ -56,7 +53,7 @@ class _FadeThroughIndexedStackState extends State<FadeThroughIndexedStack>
   }
 
   @override
-  void didUpdateWidget(FadeThroughIndexedStack oldWidget) {
+  void didUpdateWidget(SlideIndexedStack oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.index == _current) return;
 
@@ -85,9 +82,9 @@ class _FadeThroughIndexedStackState extends State<FadeThroughIndexedStack>
         final t = _controller.value;
         return Stack(
           fit: StackFit.expand,
+          clipBehavior: Clip.hardEdge,
           children: [
-            for (int i = 0; i < widget.children.length; i++)
-              _buildChild(i, t),
+            for (int i = 0; i < widget.children.length; i++) _buildChild(i, t),
           ],
         );
       },
@@ -97,20 +94,12 @@ class _FadeThroughIndexedStackState extends State<FadeThroughIndexedStack>
   Widget _buildChild(int i, double t) {
     final isCurrent = i == _current;
     final isPrevious = i == _previous;
-
-    double opacity = 0;
-    double scale = 1;
-
-    if (isCurrent) {
-      // Entrante: aparece en el 70 % final, con escalado 0.92 → 1
-      final p = Curves.easeOut.transform(const Interval(0.3, 1.0).transform(t));
-      opacity = p;
-      scale = 0.92 + 0.08 * p;
-    } else if (isPrevious) {
-      // Saliente: se desvanece en el 30 % inicial
-      opacity =
-          1 - Curves.easeIn.transform(const Interval(0.0, 0.3).transform(t));
-    }
+    final direction = _current > (_previous ?? _current) ? 1.0 : -1.0;
+    final translation = isCurrent
+        ? Offset(direction * (1 - t), 0)
+        : isPrevious
+            ? Offset(-direction * t, 0)
+            : Offset.zero;
 
     // IMPORTANTE: la estructura de widgets es siempre la misma para todos los
     // hijos y estados; si cambiara, Flutter destruiría el estado de la pantalla.
@@ -120,12 +109,9 @@ class _FadeThroughIndexedStackState extends State<FadeThroughIndexedStack>
         enabled: isCurrent || isPrevious,
         child: IgnorePointer(
           ignoring: !isCurrent,
-          child: Opacity(
-            opacity: opacity.clamp(0.0, 1.0),
-            child: Transform.scale(
-              scale: scale,
-              child: widget.children[i],
-            ),
+          child: FractionalTranslation(
+            translation: translation,
+            child: widget.children[i],
           ),
         ),
       ),

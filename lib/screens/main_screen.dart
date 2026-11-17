@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/fade_through_indexed_stack.dart';
+import '../widgets/slide_indexed_stack.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
@@ -24,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FadeThroughIndexedStack(
+      body: SlideIndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
