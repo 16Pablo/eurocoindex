@@ -67,17 +67,20 @@ class _SplashScreenState extends State<SplashScreen>
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [colorIzquierdo, colorDerecho],
-                ).createShader(bounds);
+                ).createShader(bounds.deflate(2));
               },
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Euro', style: textStyle),
-                  SizedBox(width: 4),
-                  Text('Coin', style: textStyle),
-                  SizedBox(width: 4),
-                  Text('Dex', style: textStyle),
-                ],
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Euro', style: textStyle),
+                    SizedBox(width: 4),
+                    Text('Coin', style: textStyle),
+                    SizedBox(width: 4),
+                    Text('Dex', style: textStyle),
+                  ],
+                ),
               ),
             ),
           ),
