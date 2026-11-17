@@ -32,7 +32,7 @@ class CoinsService {
       // Solo si el CSV se ha descargado bien se marcan las imágenes para
       // revisión; sin conexión no se toca nada.
       if (forceRefresh) await invalidateImageCache();
-      return compute(_parseCsv, csv);
+      return await compute(_parseCsv, csv);
     } catch (e) {
       debugPrint('No se pudo descargar CSV: $e. Usando caché local.');
       final cached = await _loadCache();

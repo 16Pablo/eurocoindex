@@ -76,8 +76,8 @@ class CoinImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (_, __) => placeholder,
-      errorWidget: (_, __, ___) => errorWidget,
+      placeholder: (_, _) => placeholder,
+      errorWidget: (_, _, _) => errorWidget,
     );
 
     if (borderRadius != null) {

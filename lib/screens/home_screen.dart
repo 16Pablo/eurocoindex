@@ -203,7 +203,7 @@ class _TypeButton extends StatelessWidget {
                 iconAsset,
                 width: iconSize,
                 height: iconSize,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (_, _, _) =>
                     Icon(fallbackIcon, size: iconSize, color: colorScheme.primary),
               ),
               const SizedBox(width: 16),

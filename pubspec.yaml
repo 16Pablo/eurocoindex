@@ -4,8 +4,8 @@ version: 1.7.1+18
 publish_to: 'none'
 
 environment:
-  sdk: '>=3.12.0 <4.0.0'
-  flutter: '>=3.44.0'
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
 
 dependencies:
   flutter:
@@ -24,7 +24,7 @@ dependencies:
   http: ^1.1.0
 
   # Imágenes con caché
-  cached_network_image: ^3.3.1
+  cached_network_image: ^4.0.3
   flutter_cache_manager: ^3.4.1
 
   # CSV parsing
@@ -32,17 +32,17 @@ dependencies:
 
   # Archivos y rutas
   path_provider: ^2.1.1
-  file_picker: ^8.0.0+1
-  share_plus: ^12.0.2
+  file_picker: ^13.4.0
+  share_plus: ^13.3.1
 
   # Preferencias y utilidades
   shared_preferences: ^2.2.2
-  package_info_plus: ^8.0.0
+  package_info_plus: ^10.2.2
   url_launcher: ^6.2.1
 
   # UI extras
   photo_view: ^0.15.0
-  shimmer: ^3.0.0
+  shimmer: ^4.0.0
 
 dev_dependencies:
   flutter_lints: ^6.0.0

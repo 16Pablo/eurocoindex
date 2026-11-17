@@ -211,14 +211,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final pickedFile = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
-      if (result == null || result.files.single.path == null) return;
+      final path = pickedFile?.path;
+      if (path == null) return;
       if (!mounted) return;
 
-      final file = File(result.files.single.path!);
+      final file = File(path);
       final provider = context.read<AppProvider>();
       final count = await provider.importCollection(file);
       if (!mounted) return;
