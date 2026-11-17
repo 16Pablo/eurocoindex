@@ -4,12 +4,14 @@ version: 1.7.1+18
 publish_to: 'none'
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
+  flutter: '>=3.44.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  dynamic_color: ^1.9.0
+  dynamic_color: ^2.1.0
+  material_ui: ^1.2.0
 
   # State management
   provider: ^6.1.1
