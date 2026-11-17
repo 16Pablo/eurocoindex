@@ -81,19 +81,23 @@ class _FilterScreenState extends State<FilterScreen> {
                     label: 'Por año',
                     selected: _mode == _FilterMode.year,
                   ),
-                  const PopupMenuDivider(),
-                  ExpressivePopupMenuItem(
-                    value: _FilterMode.yearOldestFirst,
-                    icon: Icons.arrow_upward_rounded,
-                    label: 'Años: antiguos primero',
-                    selected: !context.read<AppProvider>().commYearsNewestFirst,
-                  ),
-                  ExpressivePopupMenuItem(
-                    value: _FilterMode.yearNewestFirst,
-                    icon: Icons.arrow_downward_rounded,
-                    label: 'Años: recientes primero',
-                    selected: context.read<AppProvider>().commYearsNewestFirst,
-                  ),
+                  if (_mode == _FilterMode.year) ...[
+                    const PopupMenuDivider(),
+                    ExpressivePopupMenuItem(
+                      value: _FilterMode.yearOldestFirst,
+                      icon: Icons.arrow_upward_rounded,
+                      label: 'Años: antiguos primero',
+                      selected:
+                          !context.read<AppProvider>().commYearsNewestFirst,
+                    ),
+                    ExpressivePopupMenuItem(
+                      value: _FilterMode.yearNewestFirst,
+                      icon: Icons.arrow_downward_rounded,
+                      label: 'Años: recientes primero',
+                      selected:
+                          context.read<AppProvider>().commYearsNewestFirst,
+                    ),
+                  ],
                 ],
               ],
             ),
