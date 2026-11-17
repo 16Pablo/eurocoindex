@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dynamic_color: ^2.1.0
+  dynamic_color: ^1.8.1
 
   # State management
   provider: ^6.1.1
