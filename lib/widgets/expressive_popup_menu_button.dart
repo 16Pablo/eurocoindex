@@ -48,11 +48,13 @@ class ExpressivePopupMenuButton<T> extends StatelessWidget {
 
 class ExpressivePopupMenuItem<T> extends PopupMenuItem<T> {
   ExpressivePopupMenuItem({
+    Key? key,
     required T value,
     required IconData icon,
     required String label,
     bool selected = false,
   }) : super(
+          key: key,
           value: value,
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),

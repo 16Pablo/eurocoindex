@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen>
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [colorIzquierdo, colorDerecho],
-                ).createShader(bounds.deflate(2));
+                ).createShader(bounds.inflate(2));
               },
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 2),
