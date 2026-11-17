@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/app_constants.dart';
 import '../providers/app_provider.dart';
 import '../widgets/coin_image.dart';
+import '../widgets/expressive_popup_menu_button.dart';
 import '../widgets/grid_item.dart';
 import 'coin_list_screen.dart';
 
@@ -15,11 +16,25 @@ class FilterScreen extends StatefulWidget {
   State<FilterScreen> createState() => _FilterScreenState();
 }
 
-enum _FilterMode { country, value, year, jointCountry, jointSeries }
+enum _FilterMode {
+  country,
+  value,
+  year,
+  jointCountry,
+  jointSeries,
+  yearOldestFirst,
+  yearNewestFirst,
+}
 
 class _FilterScreenState extends State<FilterScreen> {
   _FilterMode _mode = _FilterMode.year;
   bool _isNational = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.isComm) _mode = _FilterMode.country;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,63 +47,74 @@ class _FilterScreenState extends State<FilterScreen> {
       appBar: AppBar(
         title: Text(widget.isComm ? 'Conmemorativas' : 'Normales'),
         actions: [
-          // Menú solo para secciones que lo necesitan
           if (!widget.isComm || (_isNational))
-            PopupMenuButton<_FilterMode>(
+            ExpressivePopupMenuButton<_FilterMode>(
               icon: Icon(Icons.more_vert, color: appBarForeground),
-              tooltip: 'Modo de visualización',
-              onSelected: (mode) => setState(() => _mode = mode),
+              tooltip: 'Agrupar y ordenar',
+              initialValue: _mode,
+              onSelected: _onMenuSelection,
               itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: _FilterMode.country,
-                  child: Row(children: [
-                    Icon(Icons.flag_outlined),
-                    SizedBox(width: 8),
-                    Text('Por país'),
-                  ]),
-                ),
                 if (!widget.isComm)
-                  const PopupMenuItem(
+                  ExpressivePopupMenuItem(
+                    value: _FilterMode.country,
+                    icon: Icons.flag_outlined,
+                    label: 'Por país',
+                    selected: _mode == _FilterMode.country,
+                  ),
+                if (!widget.isComm)
+                  ExpressivePopupMenuItem(
                     value: _FilterMode.value,
-                    child: Row(children: [
-                      Icon(Icons.euro_outlined),
-                      SizedBox(width: 8),
-                      Text('Por valor'),
-                    ]),
+                    icon: Icons.euro_outlined,
+                    label: 'Por valor',
+                    selected: _mode == _FilterMode.value,
                   ),
-                if (widget.isComm && _isNational)
-                  const PopupMenuItem(
+                if (widget.isComm && _isNational) ...[
+                  ExpressivePopupMenuItem(
+                    value: _FilterMode.country,
+                    icon: Icons.flag_outlined,
+                    label: 'Por país',
+                    selected: _mode == _FilterMode.country,
+                  ),
+                  ExpressivePopupMenuItem(
                     value: _FilterMode.year,
-                    child: Row(children: [
-                      Icon(Icons.calendar_today_outlined),
-                      SizedBox(width: 8),
-                      Text('Por año'),
-                    ]),
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Por año',
+                    selected: _mode == _FilterMode.year,
                   ),
+                  const PopupMenuDivider(),
+                  ExpressivePopupMenuItem(
+                    value: _FilterMode.yearOldestFirst,
+                    icon: Icons.arrow_upward_rounded,
+                    label: 'Años: antiguos primero',
+                    selected: !context.read<AppProvider>().commYearsNewestFirst,
+                  ),
+                  ExpressivePopupMenuItem(
+                    value: _FilterMode.yearNewestFirst,
+                    icon: Icons.arrow_downward_rounded,
+                    label: 'Años: recientes primero',
+                    selected: context.read<AppProvider>().commYearsNewestFirst,
+                  ),
+                ],
               ],
             ),
-          // Menú para emisiones conjuntas
           if (widget.isComm && !_isNational)
-            PopupMenuButton<_FilterMode>(
+            ExpressivePopupMenuButton<_FilterMode>(
               icon: Icon(Icons.more_vert, color: appBarForeground),
               tooltip: 'Modo de visualización',
+              initialValue: _mode,
               onSelected: (mode) => setState(() => _mode = mode),
               itemBuilder: (_) => [
-                const PopupMenuItem(
+                ExpressivePopupMenuItem(
                   value: _FilterMode.jointCountry,
-                  child: Row(children: [
-                    Icon(Icons.flag_outlined),
-                    SizedBox(width: 8),
-                    Text('Por país'),
-                  ]),
+                  icon: Icons.flag_outlined,
+                  label: 'Por país',
+                  selected: _mode == _FilterMode.jointCountry,
                 ),
-                const PopupMenuItem(
+                ExpressivePopupMenuItem(
                   value: _FilterMode.jointSeries,
-                  child: Row(children: [
-                    Icon(Icons.collections_bookmark_outlined),
-                    SizedBox(width: 8),
-                    Text('Por serie'),
-                  ]),
+                  icon: Icons.collections_bookmark_outlined,
+                  label: 'Por serie',
+                  selected: _mode == _FilterMode.jointSeries,
                 ),
               ],
             ),
@@ -102,6 +128,26 @@ class _FilterScreenState extends State<FilterScreen> {
       ),
       body: _buildBody(),
     );
+  }
+
+  Future<void> _onMenuSelection(_FilterMode mode) async {
+    if (mode == _FilterMode.yearOldestFirst ||
+        mode == _FilterMode.yearNewestFirst) {
+      try {
+        await context
+            .read<AppProvider>()
+            .setCommYearsNewestFirst(mode == _FilterMode.yearNewestFirst);
+      } catch (error) {
+        debugPrint('Could not save commemorative year order: $error');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo guardar el orden de años.')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _mode = mode);
   }
 
   Widget _buildTabs() {
@@ -198,6 +244,7 @@ class _CountryGrid extends StatelessWidget {
                 builder: (_) => CoinListScreen(
                   title: c['paisES']!,
                   groupedCoins: grouped,
+                  isCommemorative: isComm,
                 ),
               ),
             );
@@ -289,6 +336,7 @@ class _YearGrid extends StatelessWidget {
               builder: (_) => CoinListScreen(
                 title: '$year',
                 coins: coins,
+                isCommemorative: true,
               ),
             ),
           ),
@@ -334,6 +382,7 @@ class _JointCountryGrid extends StatelessWidget {
               builder: (_) => CoinListScreen(
                 title: c['paisES']!,
                 coins: coins,
+                isCommemorative: true,
               ),
             ),
           ),
@@ -379,6 +428,7 @@ class _JointSeriesGrid extends StatelessWidget {
               builder: (_) => CoinListScreen(
                 title: s['titulo'] ?? s['id']!,
                 coins: coins,
+                isCommemorative: true,
               ),
             ),
           ),

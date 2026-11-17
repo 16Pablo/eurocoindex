@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/coin.dart';
 import '../services/coins_service.dart';
@@ -11,6 +12,9 @@ enum LoadingState { idle, loading, loaded, error }
 enum CollectionFilter { all, collected, missing }
 
 class AppProvider extends ChangeNotifier {
+  static const _commYearsNewestFirstKey = 'comm_years_newest_first';
+  static const _commCoinsNewestFirstKey = 'comm_coins_newest_first';
+
   final CoinsService _coinsService = CoinsService();
   final CollectionService _collectionService = const CollectionService();
 
@@ -18,12 +22,38 @@ class AppProvider extends ChangeNotifier {
   String _errorMessage = '';
   List<Coin> _allCoins = [];
   Set<int> _collectedIds = {};
+  bool _commYearsNewestFirst = false;
+  bool _commCoinsNewestFirst = false;
 
   LoadingState get state => _state;
   String get errorMessage => _errorMessage;
   List<Coin> get allCoins => _allCoins;
   Set<int> get collectedIds => _collectedIds;
   bool get isLoaded => _state == LoadingState.loaded;
+  bool get commYearsNewestFirst => _commYearsNewestFirst;
+  bool get commCoinsNewestFirst => _commCoinsNewestFirst;
+
+  Future<void> setCommYearsNewestFirst(bool value) async {
+    if (_commYearsNewestFirst == value) return;
+
+    final preferences = await SharedPreferences.getInstance();
+    if (!await preferences.setBool(_commYearsNewestFirstKey, value)) {
+      throw StateError('Could not save the commemorative year order.');
+    }
+    _commYearsNewestFirst = value;
+    notifyListeners();
+  }
+
+  Future<void> setCommCoinsNewestFirst(bool value) async {
+    if (_commCoinsNewestFirst == value) return;
+
+    final preferences = await SharedPreferences.getInstance();
+    if (!await preferences.setBool(_commCoinsNewestFirstKey, value)) {
+      throw StateError('Could not save the commemorative coin order.');
+    }
+    _commCoinsNewestFirst = value;
+    notifyListeners();
+  }
 
   // ── Listas filtradas ──────────────────────────────────────────────────────
 
@@ -70,7 +100,8 @@ class AppProvider extends ChangeNotifier {
     for (final c in nationalCommCoins) {
       years.add(c.anoInicio);
     }
-    return years.toList()..sort();
+    final sortedYears = years.toList()..sort();
+    return _commYearsNewestFirst ? sortedYears.reversed.toList() : sortedYears;
   }
 
   // ── Series conjuntas (por IDserie + descr_serieES) ────────────────────────
@@ -235,6 +266,7 @@ class AppProvider extends ChangeNotifier {
       ]);
       _allCoins = results[0] as List<Coin>;
       _collectedIds = results[1] as Set<int>;
+      await _loadSortPreferences();
       _state = LoadingState.loaded;
     } catch (e) {
       final raw = e.toString();
@@ -242,6 +274,25 @@ class AppProvider extends ChangeNotifier {
       _state = LoadingState.error;
     }
     notifyListeners();
+  }
+
+  Future<void> _loadSortPreferences() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      _commYearsNewestFirst =
+          preferences.getBool(_commYearsNewestFirstKey) ?? false;
+      _commCoinsNewestFirst =
+          preferences.getBool(_commCoinsNewestFirstKey) ?? false;
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'display preferences',
+          context: ErrorDescription('while loading coin sorting preferences'),
+        ),
+      );
+    }
   }
 
   // ── Exportar / Importar ───────────────────────────────────────────────────
@@ -256,7 +307,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<DateTime?> getLastUpdate() => _coinsService.getLastUpdate();
-  
+
   Future<bool> checkForRemoteUpdate() => _coinsService.hasRemoteUpdate();
 
   Future<bool> getCheckUpdatesOnStart() =>

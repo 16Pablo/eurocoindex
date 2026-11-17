@@ -4,18 +4,23 @@ import 'package:provider/provider.dart';
 import '../models/coin.dart';
 import '../providers/app_provider.dart';
 import '../widgets/coin_list_item.dart';
+import '../widgets/expressive_popup_menu_button.dart';
 import 'coin_detail_screen.dart';
+
+enum _CommemorativeCoinOrder { oldestFirst, newestFirst }
 
 class CoinListScreen extends StatefulWidget {
   final String title;
   final List<Coin>? coins;
   final Map<String, List<Coin>>? groupedCoins;
+  final bool isCommemorative;
 
   const CoinListScreen({
     super.key,
     required this.title,
     this.coins,
     this.groupedCoins,
+    this.isCommemorative = false,
   }) : assert(coins != null || groupedCoins != null);
 
   @override
@@ -47,8 +52,19 @@ class _CoinListScreenState extends State<CoinListScreen> {
     } else {
       coins = widget.coins!;
     }
-    // Ordenar por fecha (aaaa/mm/dd) o anoinicio, secundario por título
-    coins = List.of(coins)..sort(_compareCoin);
+    coins = List.of(coins);
+    if (widget.isCommemorative) {
+      coins.sort((a, b) {
+        final yearCmp = a.anoInicio.compareTo(b.anoInicio);
+        if (yearCmp != 0) {
+          return provider.commCoinsNewestFirst ? -yearCmp : yearCmp;
+        }
+        final currentOrder = _compareCoin(a, b);
+        return currentOrder != 0 ? currentOrder : a.id.compareTo(b.id);
+      });
+    } else {
+      coins.sort(_compareCoin);
+    }
     return provider.applyFilter(coins, _filter);
   }
 
@@ -76,11 +92,37 @@ class _CoinListScreenState extends State<CoinListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppProvider>();
+    final provider = context.watch<AppProvider>();
     final coins = _displayCoins;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          if (widget.isCommemorative)
+            ExpressivePopupMenuButton<_CommemorativeCoinOrder>(
+              tooltip: 'Ordenar monedas',
+              initialValue: provider.commCoinsNewestFirst
+                  ? _CommemorativeCoinOrder.newestFirst
+                  : _CommemorativeCoinOrder.oldestFirst,
+              onSelected: _setCommemorativeOrder,
+              itemBuilder: (_) => [
+                ExpressivePopupMenuItem(
+                  value: _CommemorativeCoinOrder.oldestFirst,
+                  icon: Icons.arrow_upward_rounded,
+                  label: 'Más antiguas primero',
+                  selected: !provider.commCoinsNewestFirst,
+                ),
+                ExpressivePopupMenuItem(
+                  value: _CommemorativeCoinOrder.newestFirst,
+                  icon: Icons.arrow_downward_rounded,
+                  label: 'Más recientes primero',
+                  selected: provider.commCoinsNewestFirst,
+                ),
+              ],
+            ),
+        ],
+      ),
       body: Column(
         children: [
           if (widget.groupedCoins != null && _serieKeys.length > 1)
@@ -115,6 +157,21 @@ class _CoinListScreenState extends State<CoinListScreen> {
         collectedCount: _collectedCount,
       ),
     );
+  }
+
+  Future<void> _setCommemorativeOrder(
+    _CommemorativeCoinOrder order,
+  ) async {
+    try {
+      await context.read<AppProvider>().setCommCoinsNewestFirst(
+          order == _CommemorativeCoinOrder.newestFirst);
+    } catch (error) {
+      debugPrint('Could not save commemorative coin order: $error');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo guardar el orden de monedas.')),
+      );
+    }
   }
 
   int get _allCount {
