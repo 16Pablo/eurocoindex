@@ -9,8 +9,14 @@ import '../widgets/coin_image.dart';
 class CoinListItem extends StatelessWidget {
   final Coin coin;
   final VoidCallback? onTap;
+  final bool selected;
 
-  const CoinListItem({super.key, required this.coin, this.onTap});
+  const CoinListItem({
+    super.key,
+    required this.coin,
+    this.onTap,
+    this.selected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +27,15 @@ class CoinListItem extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      color: selected
+          ? colorScheme.secondaryContainer.withValues(alpha: 0.45)
+          : null,
+      shape: selected
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+              side: BorderSide(color: colorScheme.primary, width: 1.5),
+            )
+          : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         onTap: onTap,

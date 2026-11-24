@@ -9,6 +9,7 @@ import '../models/coin.dart';
 import '../providers/app_provider.dart';
 import '../services/app_cache_manager.dart';
 import '../theme/app_theme.dart';
+import '../utils/adaptive_layout.dart';
 import '../widgets/coin_image.dart';
 
 class CoinDetailScreen extends StatelessWidget {
@@ -24,43 +25,6 @@ class CoinDetailScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final appBarForeground =
         isDark ? colorScheme.onSurface : colorScheme.onPrimary;
-
-    // Imágenes disponibles de esta moneda
-    final images = [
-      if (coin.imageCoin != null)
-        AppConstants.coinImageUrl(coin.imageCoin!),
-      if (coin.imageComun1 != null)
-        AppConstants.valueImageUrl(coin.imageComun1!),
-      if (coin.imageComun2 != null)
-        AppConstants.valueImageUrl(coin.imageComun2!),
-    ];
-
-    // Monedas con la misma coincidencia (nivel más específico)
-    final similar = coin.coincidencia != null
-        ? provider.allCoins
-            .where((c) =>
-                c.coincidencia == coin.coincidencia &&
-                c.id != coin.id &&
-                c.emitida)
-            .take(10)
-            .toList()
-        : <Coin>[];
-
-    // Monedas relacionadas: mismo subtag si existe, si no mismo tag
-    // Excluir las que ya aparecen en "similar"
-    final similarIds = similar.map((c) => c.id).toSet();
-    final related = (coin.subtagES != null || coin.tagES != null)
-        ? provider.allCoins
-            .where((c) =>
-                c.id != coin.id &&
-                c.emitida &&
-                !similarIds.contains(c.id) &&
-                (coin.subtagES != null
-                    ? c.subtagES == coin.subtagES
-                    : c.tagES == coin.tagES))
-            .take(10)
-            .toList()
-        : <Coin>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -105,115 +69,326 @@ class CoinDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Galería de imágenes ──────────────────────────────────────
-            if (images.isNotEmpty)
-              _ImageGallery(images: images),
+      body: CoinDetailBody(coin: coin),
+    );
+  }
+}
 
-            const SizedBox(height: 20),
+/// Contenido reutilizable de detalle de moneda, adaptable tanto a vista
+/// estrecha vertical como a dos columnas en tablets/apaisado/plegables o al
+/// panel derecho del modo maestro-detalle.
+class CoinDetailBody extends StatelessWidget {
+  final Coin coin;
+  final bool showInlineHeader;
+  final ValueChanged<Coin>? onRelatedCoinTap;
 
-            // ── Título ───────────────────────────────────────────────────
-            if (coin.titulo != null)
-              Text(
-                coin.titulo!,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
+  const CoinDetailBody({
+    super.key,
+    required this.coin,
+    this.showInlineHeader = false,
+    this.onRelatedCoinTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final layout = AdaptiveLayout.of(context);
+
+    // Imágenes disponibles de esta moneda
+    final images = [
+      if (coin.imageCoin != null)
+        AppConstants.coinImageUrl(coin.imageCoin!),
+      if (coin.imageComun1 != null)
+        AppConstants.valueImageUrl(coin.imageComun1!),
+      if (coin.imageComun2 != null)
+        AppConstants.valueImageUrl(coin.imageComun2!),
+    ];
+
+    // Monedas con la misma coincidencia (nivel más específico)
+    final similar = coin.coincidencia != null
+        ? provider.allCoins
+            .where((c) =>
+                c.coincidencia == coin.coincidencia &&
+                c.id != coin.id &&
+                c.emitida)
+            .take(10)
+            .toList()
+        : <Coin>[];
+
+    // Monedas relacionadas: mismo subtag si existe, si no mismo tag
+    // Excluir las que ya aparecen en "similar"
+    final similarIds = similar.map((c) => c.id).toSet();
+    final related = (coin.subtagES != null || coin.tagES != null)
+        ? provider.allCoins
+            .where((c) =>
+                c.id != coin.id &&
+                c.emitida &&
+                !similarIds.contains(c.id) &&
+                (coin.subtagES != null
+                    ? c.subtagES == coin.subtagES
+                    : c.tagES == coin.tagES))
+            .take(10)
+            .toList()
+        : <Coin>[];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final split = layout.computeTwoPaneSplit(
+          constraints.maxWidth,
+          minLeftWidth: 260,
+          minRightWidth: 320,
+          fallbackLeftRatio: 0.42,
+          fallbackMinLeft: 280,
+          fallbackMaxLeft: 440,
+          fallbackGap: 24,
+          minCombinedWidth: 640,
+        );
+
+        final detailsWidgets = <Widget>[
+          if (showInlineHeader) ...[
+            _InlineCoinHeader(coin: coin),
+            const SizedBox(height: 16),
+          ],
+          if (coin.titulo != null) ...[
+            Text(
+              coin.titulo!,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+          ],
+          // ── Info rápida ────────────────────────────────────────────────
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _InfoChip(
+                label: coin.valorLabel,
+                color: colorScheme.primary,
               ),
-            if (coin.titulo != null) const SizedBox(height: 8),
+              _InfoChip(
+                icon: Icons.calendar_today,
+                label: coin.yearRange,
+              ),
+              if (coin.fecha != null && coin.fecha!.isNotEmpty)
+                _InfoChip(
+                  icon: Icons.event,
+                  label: coin.fecha!,
+                ),
+              if (coin.conm)
+                _InfoChip(
+                  icon: Icons.star,
+                  label: 'Conmemorativa',
+                  color: Colors.amber[700],
+                ),
+              if (coin.conj)
+                const _InfoChip(
+                  icon: Icons.groups,
+                  label: 'Emisión conjunta',
+                ),
+              if (coin.frase != null)
+                _InfoChip(icon: Icons.bar_chart, label: coin.frase!),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-            // ── Info rápida ──────────────────────────────────────────────
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+          // ── Descripción ────────────────────────────────────────────────
+          if (coin.descrCoinES != null) ...[
+            const _SectionTitle('Descripción'),
+            Text(
+              coin.descrCoinES!,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // ── Motivo (campo futuro) ──────────────────────────────────────
+          if (coin.motivoES != null) ...[
+            const _SectionTitle('Motivo'),
+            Text(
+              coin.motivoES!,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // ── Detalles ───────────────────────────────────────────────────
+          const _SectionTitle('Detalles'),
+          _DetailRow('País', '${coin.paisES} (${coin.paisVO})'),
+          _DetailRow('Valor', coin.valorLabel),
+          _DetailRow('Año de emisión', coin.yearRange),
+          if (coin.descrSerieES != null)
+            _DetailRow('Serie', coin.descrSerieES!),
+          if (coin.tagES != null) _DetailRow('Categoría', coin.tagES!),
+          if (coin.subtagES != null)
+            _DetailRow('Subcategoría', coin.subtagES!),
+          if (coin.coincidencia != null)
+            _DetailRow('Coincidencia', coin.coincidencia!),
+          if (coin.rareza != null)
+            _DetailRow('Rareza', '${coin.frase ?? ''} (${coin.rareza})'),
+          if (coin.conjOficial != null)
+            _DetailRow('Serie conjunta', coin.conjOficial!),
+
+          const SizedBox(height: 20),
+
+          // ── Monedas con la misma coincidencia ──────────────────────────
+          if (similar.isNotEmpty) ...[
+            _SectionTitle('Monedas similares · ${coin.coincidencia}'),
+            const SizedBox(height: 8),
+            _RelatedList(
+              coins: similar,
+              onCoinTap: onRelatedCoinTap,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // ── Monedas relacionadas (mismo subtag o tag) ──────────────────
+          if (related.isNotEmpty) ...[
+            _SectionTitle(
+              'Monedas relacionadas · ${coin.subtagES ?? coin.tagES}',
+            ),
+            const SizedBox(height: 8),
+            _RelatedList(
+              coins: related,
+              onCoinTap: onRelatedCoinTap,
+            ),
+            const SizedBox(height: 16),
+          ],
+        ];
+
+        // ── Vista ancha de 2 columnas (tablet / apaisado / plegable) ─────
+        if (split != null) {
+          final boundedHeight = constraints.hasBoundedHeight
+              ? constraints.maxHeight
+              : layout.height;
+          final wideGalleryHeight = (boundedHeight - 96).clamp(160.0, 320.0);
+          final leftWidth = split.alignedToHinge
+              ? (split.leftWidth - 20).clamp(200.0, 520.0)
+              : split.leftWidth;
+
+          final content = Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InfoChip(
-                    label: coin.valorLabel,
-                    color: colorScheme.primary),
-                _InfoChip(
-                    icon: Icons.calendar_today,
-                    label: coin.yearRange),
-                if (coin.fecha != null && coin.fecha!.isNotEmpty)
-                  _InfoChip(
-                    icon: Icons.event,
-                    label: coin.fecha!),
-                if (coin.conm)
-                  _InfoChip(
-                    icon: Icons.star,
-                    label: 'Conmemorativa',
-                    color: Colors.amber[700],
+                SizedBox(
+                  width: leftWidth,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        if (images.isNotEmpty)
+                          _ImageGallery(
+                            key: ValueKey(coin.id),
+                            images: images,
+                            height: wideGalleryHeight,
+                          ),
+                      ],
+                    ),
                   ),
-                if (coin.conj)
-                  const _InfoChip(
-                      icon: Icons.groups,
-                      label: 'Emisión conjunta'),
-                if (coin.frase != null)
-                  _InfoChip(icon: Icons.bar_chart, label: coin.frase!),
+                ),
+                SizedBox(width: split.gapWidth),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: detailsWidgets,
+                    ),
+                  ),
+                ),
               ],
             ),
+          );
 
-            const SizedBox(height: 16),
+          if (split.alignedToHinge) return content;
 
-            // ── Descripción ──────────────────────────────────────────────
-            if (coin.descrCoinES != null) ...[
-              const _SectionTitle('Descripción'),
-              Text(coin.descrCoinES!,
-                  style: const TextStyle(fontSize: 14, height: 1.5)),
-              const SizedBox(height: 12),
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1120),
+              child: content,
+            ),
+          );
+        }
+
+        // ── Vista vertical clásica o panel estrecho ──────────────────────
+        final compactGalleryHeight = constraints.hasBoundedHeight &&
+                constraints.maxHeight < 520
+            ? (constraints.maxHeight * 0.42).clamp(150.0, 220.0)
+            : 220.0;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (images.isNotEmpty) ...[
+                _ImageGallery(
+                  key: ValueKey(coin.id),
+                  images: images,
+                  height: compactGalleryHeight,
+                ),
+                const SizedBox(height: 20),
+              ],
+              ...detailsWidgets,
             ],
+          ),
+        );
+      },
+    );
+  }
+}
 
-            // ── Motivo (campo futuro) ────────────────────────────────────
-            if (coin.motivoES != null) ...[
-              const _SectionTitle('Motivo'),
-              Text(coin.motivoES!,
-                  style: const TextStyle(fontSize: 14, height: 1.5)),
-              const SizedBox(height: 12),
-            ],
+class _InlineCoinHeader extends StatelessWidget {
+  final Coin coin;
+  const _InlineCoinHeader({required this.coin});
 
-            // ── Detalles ─────────────────────────────────────────────────
-            const _SectionTitle('Detalles'),
-            _DetailRow('País', '${coin.paisES} (${coin.paisVO})'),
-            _DetailRow('Valor', coin.valorLabel),
-            _DetailRow('Año de emisión', coin.yearRange),
-            if (coin.descrSerieES != null)
-              _DetailRow('Serie', coin.descrSerieES!),
-            if (coin.tagES != null)
-              _DetailRow('Categoría', coin.tagES!),
-            if (coin.subtagES != null)
-              _DetailRow('Subcategoría', coin.subtagES!),
-            if (coin.coincidencia != null)
-              _DetailRow('Coincidencia', coin.coincidencia!),
-            if (coin.rareza != null)
-              _DetailRow('Rareza', '${coin.frase ?? ''} (${coin.rareza})'),
-            if (coin.conjOficial != null)
-              _DetailRow('Serie conjunta', coin.conjOficial!),
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final collected = provider.isCollected(coin.id);
+    final colorScheme = Theme.of(context).colorScheme;
 
-            const SizedBox(height: 20),
-
-            // ── Monedas con la misma coincidencia ─────────────────────────
-            if (similar.isNotEmpty) ...[
-              _SectionTitle('Monedas similares · ${coin.coincidencia}'),
-              const SizedBox(height: 8),
-              _RelatedList(coins: similar),
-              const SizedBox(height: 16),
-            ],
-
-            // ── Monedas relacionadas (mismo subtag o tag) ─────────────────
-            if (related.isNotEmpty) ...[
-              _SectionTitle(
-                'Monedas relacionadas · ${coin.subtagES ?? coin.tagES}',
-              ),
-              const SizedBox(height: 8),
-              _RelatedList(coins: related),
-              const SizedBox(height: 16),
-            ],
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
+      ),
+      child: Row(
+        children: [
+          CoinImage(
+            filename: coin.flag,
+            type: CoinImageType.flag,
+            width: 30,
+            height: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              coin.paisES,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          if (collected)
+            FilledButton.tonalIcon(
+              onPressed: () => provider.toggleCollection(coin.id),
+              icon: const Icon(Icons.check_circle, size: 18),
+              label: const Text('Obtenida'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: () => provider.toggleCollection(coin.id),
+              icon: const Icon(Icons.add_circle_outline, size: 18),
+              label: const Text('Añadir'),
+            ),
+        ],
       ),
     );
   }
@@ -223,7 +398,9 @@ class CoinDetailScreen extends StatelessWidget {
 
 class _RelatedList extends StatelessWidget {
   final List<Coin> coins;
-  const _RelatedList({required this.coins});
+  final ValueChanged<Coin>? onCoinTap;
+
+  const _RelatedList({required this.coins, this.onCoinTap});
 
   @override
   Widget build(BuildContext context) {
@@ -235,11 +412,18 @@ class _RelatedList extends StatelessWidget {
         itemBuilder: (context, i) {
           final r = coins[i];
           return GestureDetector(
-            onTap: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => CoinDetailScreen(coin: r)),
-            ),
+            onTap: () {
+              if (onCoinTap != null) {
+                onCoinTap!(r);
+                return;
+              }
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CoinDetailScreen(coin: r),
+                ),
+              );
+            },
             child: Container(
               width: 90,
               margin: const EdgeInsets.only(right: 10),
@@ -274,7 +458,13 @@ class _RelatedList extends StatelessWidget {
 
 class _ImageGallery extends StatefulWidget {
   final List<String> images;
-  const _ImageGallery({required this.images});
+  final double height;
+
+  const _ImageGallery({
+    super.key,
+    required this.images,
+    this.height = 220,
+  });
 
   @override
   State<_ImageGallery> createState() => _ImageGalleryState();
@@ -292,7 +482,7 @@ class _ImageGalleryState extends State<_ImageGallery> {
           child: GestureDetector(
             onTap: () => _openFullscreen(context, _current),
             child: SizedBox(
-              height: 220,
+              height: widget.height,
               child: PageView.builder(
                 itemCount: widget.images.length,
                 onPageChanged: (i) => setState(() => _current = i),

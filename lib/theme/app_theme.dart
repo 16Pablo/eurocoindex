@@ -43,6 +43,10 @@ class AppTheme {
         backgroundColor: scheme.surface,
         type: BottomNavigationBarType.fixed,
       ),
+      navigationRailTheme: _navigationRailTheme(
+        scheme,
+        backgroundColor: scheme.surfaceContainerLow,
+      ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainerLow,
         elevation: 0,
@@ -120,6 +124,10 @@ class AppTheme {
         backgroundColor: scheme.surfaceContainerHighest,
         type: BottomNavigationBarType.fixed,
       ),
+      navigationRailTheme: _navigationRailTheme(
+        scheme,
+        backgroundColor: scheme.surfaceContainer,
+      ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainer,
         elevation: 0,
@@ -164,6 +172,27 @@ class AppTheme {
         builders: <TargetPlatform, PageTransitionsBuilder>{
           TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
         },
+      ),
+    );
+  }
+
+  static NavigationRailThemeData _navigationRailTheme(
+    ColorScheme scheme, {
+    required Color backgroundColor,
+  }) {
+    return NavigationRailThemeData(
+      backgroundColor: backgroundColor,
+      indicatorColor: scheme.secondaryContainer,
+      selectedIconTheme: IconThemeData(color: scheme.onSecondaryContainer),
+      unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+      selectedLabelTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+      ),
+      unselectedLabelTextStyle: TextStyle(
+        color: scheme.onSurfaceVariant,
+        fontSize: 12,
       ),
     );
   }

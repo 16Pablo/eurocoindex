@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/app_provider.dart';
+import '../utils/adaptive_layout.dart';
 import 'legal_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -47,127 +48,186 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     final totalCoins = provider.allCoins.where((c) => c.emitida).length;
     final collected = provider.collectedIds.length;
+    final layout = AdaptiveLayout.of(context);
+
+    final statsAndAbout = <Widget>[
+      const _SectionHeader('Mi colección'),
+      Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _StatItem(
+                      'Obtenidas', '$collected', colorScheme.primary),
+                  _StatItem('Faltantes',
+                      '${totalCoins - collected}', Colors.grey),
+                  _StatItem('Total catálogo', '$totalCoins',
+                      colorScheme.secondary),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: totalCoins > 0 ? collected / totalCoins : 0,
+                  minHeight: 10,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    collected == totalCoins
+                        ? Colors.green
+                        : colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                totalCoins > 0
+                    ? '${(collected / totalCoins * 100).toStringAsFixed(1)}% completado'
+                    : '',
+                style:
+                    const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    final backupAndDb = <Widget>[
+      const _SectionHeader('Copia de seguridad'),
+      ListTile(
+        leading: const Icon(Icons.upload),
+        title: const Text('Exportar colección'),
+        subtitle: const Text('Guarda un archivo CSV con tus monedas'),
+        onTap: () => _exportCollection(),
+      ),
+      const Divider(indent: 56),
+      ListTile(
+        leading: const Icon(Icons.download),
+        title: const Text('Importar colección'),
+        subtitle: const Text(
+            'Restaura una copia de seguridad (reemplaza la actual)'),
+        onTap: () => _importCollection(),
+      ),
+      const _SectionHeader('Base de datos'),
+      ListTile(
+        leading: const Icon(Icons.sync),
+        title: const Text('Actualizar catálogo'),
+        subtitle: _lastUpdate != null
+            ? Text(
+                'Última actualización: ${_lastUpdate!.day}/${_lastUpdate!.month}/${_lastUpdate!.year}')
+            : const Text('Nunca actualizado'),
+        onTap: () => _refreshData(),
+      ),
+      const Divider(indent: 56),
+      SwitchListTile(
+        secondary: const Icon(Icons.notifications_active_outlined),
+        title: const Text('Comprobar actualizaciones al abrir'),
+        subtitle: const Text(
+            'Avisa si hay monedas o imágenes nuevas; no descarga nada hasta que aceptes'),
+        value: _checkOnStart,
+        onChanged: (value) async {
+          setState(() => _checkOnStart = value);
+          await provider.setCheckUpdatesOnStart(value);
+        },
+      ),
+      const Divider(indent: 56),
+      ListTile(
+        leading: const Icon(Icons.policy_outlined),
+        title: const Text('Licencias y privacidad'),
+        subtitle: const Text(
+            'Créditos, fuentes de datos y política de privacidad'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const LegalScreen()),
+        ),
+      ),
+    ];
+
+    final about = <Widget>[
+      const _SectionHeader('Acerca de'),
+      ListTile(
+        leading: const Icon(Icons.info_outline),
+        title: const Text('EuroCoinDex'),
+        subtitle: Text('Versión $_appVersion'),
+      ),
+      const Divider(indent: 56),
+      ListTile(
+        leading: const Icon(Icons.code),
+        title: const Text('Código fuente'),
+        subtitle: const Text('github.com/16Pablo/eurocoindex'),
+        onTap: () => _openExternalUrl('https://github.com/16Pablo/eurocoindex'),
+      ),
+    ];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ajustes')),
-      body: ListView(
-        children: [
-          const _SectionHeader('Mi colección'),
-          Card(
-            margin:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final split = layout.computeTwoPaneSplit(
+            constraints.maxWidth,
+            minLeftWidth: 260,
+            minRightWidth: 320,
+            fallbackLeftRatio: 0.40,
+            fallbackMinLeft: 280,
+            fallbackMaxLeft: 400,
+            fallbackGap: 16,
+            minCombinedWidth: 680,
+          );
+
+          if (split != null) {
+            final row = Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: split.leftWidth,
+                  child: ListView(
+                    padding: const EdgeInsets.only(bottom: 32),
                     children: [
-                      _StatItem(
-                          'Obtenidas', '$collected', colorScheme.primary),
-                      _StatItem('Faltantes',
-                          '${totalCoins - collected}', Colors.grey),
-                      _StatItem('Total catálogo', '$totalCoins',
-                          colorScheme.secondary),
+                      ...statsAndAbout,
+                      ...about,
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: totalCoins > 0 ? collected / totalCoins : 0,
-                      minHeight: 10,
-                      backgroundColor: Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        collected == totalCoins
-                            ? Colors.green
-                            : colorScheme.primary,
-                      ),
-                    ),
+                ),
+                SizedBox(width: split.gapWidth),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.only(bottom: 32),
+                    children: backupAndDb,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    totalCoins > 0
-                        ? '${(collected / totalCoins * 100).toStringAsFixed(1)}% completado'
-                        : '',
-                    style:
-                        const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                ),
+              ],
+            );
+
+            if (split.alignedToHinge) return row;
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1080),
+                child: row,
+              ),
+            );
+          }
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: ListView(
+                children: [
+                  ...statsAndAbout,
+                  ...backupAndDb,
+                  ...about,
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-          ),
-
-          const _SectionHeader('Copia de seguridad'),
-          ListTile(
-            leading: const Icon(Icons.upload),
-            title: const Text('Exportar colección'),
-            subtitle:
-                const Text('Guarda un archivo CSV con tus monedas'),
-            onTap: () => _exportCollection(),
-          ),
-          const Divider(indent: 56),
-          ListTile(
-            leading: const Icon(Icons.download),
-            title: const Text('Importar colección'),
-            subtitle: const Text(
-                'Restaura una copia de seguridad (reemplaza la actual)'),
-            onTap: () => _importCollection(),
-          ),
-
-          const _SectionHeader('Base de datos'),
-          ListTile(
-            leading: const Icon(Icons.sync),
-            title: const Text('Actualizar catálogo'),
-            subtitle: _lastUpdate != null
-                ? Text(
-                    'Última actualización: ${_lastUpdate!.day}/${_lastUpdate!.month}/${_lastUpdate!.year}')
-                : const Text('Nunca actualizado'),
-            onTap: () => _refreshData(),
-          ),
-                    const Divider(indent: 56),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_active_outlined),
-            title: const Text('Comprobar actualizaciones al abrir'),
-            subtitle: const Text(
-                'Avisa si hay monedas o imágenes nuevas; no descarga nada hasta que aceptes'),
-            value: _checkOnStart,
-            onChanged: (value) async {
-              setState(() => _checkOnStart = value);
-              await provider.setCheckUpdatesOnStart(value);
-            },
-          ),
-
-          const Divider(indent: 56),
-          ListTile(
-            leading: const Icon(Icons.policy_outlined),
-            title: const Text('Licencias y privacidad'),
-            subtitle: const Text('Créditos, fuentes de datos y política de privacidad'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LegalScreen()),
-            ),
-          ),
-          
-          const _SectionHeader('Acerca de'),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('EuroCoinDex'),
-            subtitle: Text('Versión $_appVersion'),
-          ),
-
-          const Divider(indent: 56),
-          ListTile(
-            leading: const Icon(Icons.code),
-            title: const Text('Código fuente'),
-            subtitle:
-                const Text('github.com/16Pablo/eurocoindex'),
-            onTap: () => _openExternalUrl('https://github.com/16Pablo/eurocoindex'),
-          ),
-
-          const SizedBox(height: 32),
-        ],
+          );
+        },
       ),
     );
   }

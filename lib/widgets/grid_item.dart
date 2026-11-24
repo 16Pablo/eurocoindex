@@ -43,12 +43,17 @@ class GridItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Imagen
-              CoinImage(
-                filename: imageFilename,
-                type: imageType,
-                width: imageWidth,
-                height: imageHeight,
-                fit: BoxFit.contain,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: CoinImage(
+                    filename: imageFilename,
+                    type: imageType,
+                    width: imageWidth,
+                    height: imageHeight,
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
               if (label != null) ...[
                 const SizedBox(height: 8),

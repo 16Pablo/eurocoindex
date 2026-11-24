@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/coin.dart';
 import '../providers/app_provider.dart';
+import '../utils/adaptive_layout.dart';
 import '../widgets/coin_list_item.dart';
 import '../widgets/expressive_popup_menu_button.dart';
 import 'coin_detail_screen.dart';
@@ -30,6 +31,7 @@ class CoinListScreen extends StatefulWidget {
 class _CoinListScreenState extends State<CoinListScreen> {
   CollectionFilter _filter = CollectionFilter.all;
   String? _selectedSerie;
+  Coin? _selectedCoin;
 
   List<String> get _serieKeys {
     if (widget.groupedCoins == null) return [];
@@ -96,6 +98,81 @@ class _CoinListScreenState extends State<CoinListScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final coins = _displayCoins;
+    final layout = AdaptiveLayout.of(context);
+    final split = layout.computeTwoPaneSplit(
+      layout.width,
+      minLeftWidth: 280,
+      minRightWidth: 320,
+      fallbackLeftRatio: 0.42,
+      fallbackMinLeft: 320,
+      fallbackMaxLeft: 430,
+      fallbackGap: 1,
+      minCombinedWidth: 700,
+    );
+
+    Coin? effectiveSelected;
+    if (split != null && coins.isNotEmpty) {
+      if (_selectedCoin != null &&
+          coins.any((c) => c.id == _selectedCoin!.id)) {
+        effectiveSelected = _selectedCoin;
+      } else {
+        effectiveSelected = coins.first;
+      }
+    }
+
+    final bottomFilter = _BottomFilter(
+      selected: _filter,
+      onSelect: (f) => setState(() => _filter = f),
+      allCount: _allCount,
+      collectedCount: _collectedCount,
+    );
+
+    final listContent = Column(
+      children: [
+        if (widget.groupedCoins != null && _serieKeys.length > 1)
+          _SeriesTabs(
+            keys: _serieKeys,
+            selected: _selectedSerie ?? _serieKeys.first,
+            onSelect: (k) => setState(() => _selectedSerie = k),
+          ),
+        Expanded(
+          child: coins.isEmpty
+              ? const _EmptyView()
+              : ListView.builder(
+                  key: PageStorageKey(
+                    'coin_list_${widget.title}_${_selectedSerie ?? ''}',
+                  ),
+                  padding: EdgeInsets.only(
+                    top: 8,
+                    bottom: split != null ? 12 : 80,
+                  ),
+                  itemCount: coins.length,
+                  itemBuilder: (context, i) {
+                    final coin = coins[i];
+                    final isSelected =
+                        split != null && effectiveSelected?.id == coin.id;
+                    return CoinListItem(
+                      coin: coin,
+                      selected: isSelected,
+                      onTap: () {
+                        if (split != null) {
+                          setState(() => _selectedCoin = coin);
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CoinDetailScreen(coin: coin),
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+        ),
+        if (split != null) SafeArea(top: false, child: bottomFilter),
+      ],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -125,39 +202,45 @@ class _CoinListScreenState extends State<CoinListScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          if (widget.groupedCoins != null && _serieKeys.length > 1)
-            _SeriesTabs(
-              keys: _serieKeys,
-              selected: _selectedSerie ?? _serieKeys.first,
-              onSelect: (k) => setState(() => _selectedSerie = k),
-            ),
-          Expanded(
-            child: coins.isEmpty
-                ? const _EmptyView()
-                : ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 80),
-                    itemCount: coins.length,
-                    itemBuilder: (context, i) => CoinListItem(
-                      coin: coins[i],
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CoinDetailScreen(coin: coins[i]),
-                        ),
-                      ),
-                    ),
+      body: split == null
+          ? listContent
+          : Row(
+              children: [
+                SizedBox(width: split.leftWidth, child: listContent),
+                if (split.alignedToHinge)
+                  SizedBox(width: split.gapWidth)
+                else
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: _BottomFilter(
-        selected: _filter,
-        onSelect: (f) => setState(() => _filter = f),
-        allCount: _allCount,
-        collectedCount: _collectedCount,
-      ),
+                Expanded(
+                  child: effectiveSelected == null
+                      ? const _EmptyView()
+                      : CoinDetailBody(
+                          coin: effectiveSelected,
+                          showInlineHeader: true,
+                          onRelatedCoinTap: (relatedCoin) {
+                            final inCurrentList =
+                                coins.any((c) => c.id == relatedCoin.id);
+                            if (inCurrentList) {
+                              setState(() => _selectedCoin = relatedCoin);
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      CoinDetailScreen(coin: relatedCoin),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                ),
+              ],
+            ),
+      bottomNavigationBar: split == null ? bottomFilter : null,
     );
   }
 

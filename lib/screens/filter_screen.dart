@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/app_constants.dart';
 import '../providers/app_provider.dart';
+import '../utils/adaptive_layout.dart';
 import '../widgets/coin_image.dart';
 import '../widgets/expressive_popup_menu_button.dart';
 import '../widgets/grid_item.dart';
@@ -212,14 +213,8 @@ class _CountryGrid extends StatelessWidget {
     final countries =
         isComm ? provider.commCountries : provider.normalCountries;
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.3,
-      ),
+    return _ResponsiveGrid(
+      childAspectRatio: 1.3,
       itemCount: countries.length,
       itemBuilder: (context, i) {
         final c = countries[i];
@@ -267,14 +262,8 @@ class _ValueGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.3,
-      ),
+    return _ResponsiveGrid(
+      childAspectRatio: 1.3,
       itemCount: AppConstants.allValues.length,
       itemBuilder: (context, i) {
         final v = AppConstants.allValues[i];
@@ -312,14 +301,8 @@ class _YearGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final years = provider.commYears;
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.4,
-      ),
+    return _ResponsiveGrid(
+      childAspectRatio: 1.4,
       itemCount: years.length,
       itemBuilder: (context, i) {
         final year = years[i];
@@ -360,14 +343,8 @@ class _JointCountryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final countries = provider.jointCountries;
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.3,
-      ),
+    return _ResponsiveGrid(
+      childAspectRatio: 1.3,
       itemCount: countries.length,
       itemBuilder: (context, i) {
         final c = countries[i];
@@ -406,14 +383,8 @@ class _JointSeriesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final series = provider.jointSeries;
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.3,
-      ),
+    return _ResponsiveGrid(
+      childAspectRatio: 1.3,
       itemCount: series.length,
       itemBuilder: (context, i) {
         final s = series[i];
@@ -436,6 +407,42 @@ class _JointSeriesGrid extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+// ── Cuadrícula adaptable al ancho ──────────────────────────────────────────
+
+class _ResponsiveGrid extends StatelessWidget {
+  final int itemCount;
+  final double childAspectRatio;
+  final IndexedWidgetBuilder itemBuilder;
+
+  const _ResponsiveGrid({
+    required this.itemCount,
+    required this.childAspectRatio,
+    required this.itemBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = AdaptiveLayout.gridColumnCount(
+          constraints.maxWidth,
+        );
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: itemCount,
+          itemBuilder: itemBuilder,
         );
       },
     );

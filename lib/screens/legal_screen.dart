@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,9 +19,16 @@ class LegalScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Créditos y licencias')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        children: [
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding =
+              math.max(0.0, (constraints.maxWidth - 760) / 2);
+          return ListView(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 12,
+            ),
+            children: [
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Política de privacidad'),
@@ -61,6 +70,8 @@ class LegalScreen extends StatelessWidget {
 
           const SizedBox(height: 24),
         ],
+          );
+        },
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../utils/adaptive_layout.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
@@ -29,9 +30,15 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
+    final layout = AdaptiveLayout.of(context);
+    final useRail = layout.useNavigationRail;
+
+    final pageView = MediaQuery.removePadding(
+      context: context,
+      removeLeft: useRail,
+      child: PageView(
         controller: _pageController,
+        physics: useRail ? const NeverScrollableScrollPhysics() : null,
         onPageChanged: (index) {
           if (index != _currentIndex) {
             setState(() => _currentIndex = index);
@@ -41,35 +48,134 @@ class _MainScreenState extends State<MainScreen> {
           for (final screen in _screens) _KeepAlivePage(child: screen),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) {
-          if (i != _currentIndex) {
-            _pageController.animateToPage(
-              i,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: 'Buscar',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Ajustes',
-          ),
+    );
+
+    return Scaffold(
+      body: Row(
+        children: [
+          if (useRail) ...[
+            _buildNavigationRail(context, layout),
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ],
+          Expanded(child: pageView),
         ],
       ),
+      bottomNavigationBar: useRail ? null : _buildNavigationBar(),
+    );
+  }
+
+  Widget _buildNavigationBar() {
+    return NavigationBar(
+      selectedIndex: _currentIndex,
+      onDestinationSelected: (i) {
+        if (i != _currentIndex) {
+          _pageController.animateToPage(
+            i,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      },
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: 'Inicio',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.search_outlined),
+          selectedIcon: Icon(Icons.search),
+          label: 'Buscar',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings),
+          label: 'Ajustes',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavigationRail(BuildContext context, AdaptiveLayout layout) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final extended = layout.useExtendedRail;
+
+    return NavigationRail(
+      extended: extended,
+      scrollable: true,
+      selectedIndex: _currentIndex,
+      groupAlignment: layout.isShortHeight ? 0.0 : -0.85,
+      labelType: extended
+          ? NavigationRailLabelType.none
+          : NavigationRailLabelType.all,
+      leading: layout.isShortHeight
+          ? null
+          : Padding(
+              padding: EdgeInsets.fromLTRB(
+                extended ? 16 : 0,
+                12,
+                extended ? 16 : 0,
+                16,
+              ),
+              child: extended
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.euro_rounded,
+                            size: 20,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'EuroCoinDex',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    )
+                  : CircleAvatar(
+                      radius: 20,
+                      backgroundColor: colorScheme.primaryContainer,
+                      child: Icon(
+                        Icons.euro_rounded,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+            ),
+      onDestinationSelected: (i) {
+        if (i != _currentIndex) {
+          _pageController.jumpToPage(i);
+        }
+      },
+      destinations: const [
+        NavigationRailDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: Text('Inicio'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.search_outlined),
+          selectedIcon: Icon(Icons.search),
+          label: Text('Buscar'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings),
+          label: Text('Ajustes'),
+        ),
+      ],
     );
   }
 }

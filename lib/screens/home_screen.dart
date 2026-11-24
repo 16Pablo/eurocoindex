@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/adaptive_layout.dart';
 import 'filter_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -106,62 +107,130 @@ class _HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
+    final layout = AdaptiveLayout.of(context);
 
     final normalCollected = provider.countCollected(provider.normalCoins);
     final normalTotal = provider.normalCoins.length;
     final commCollected = provider.countCollected(provider.commCoins);
     final commTotal = provider.commCoins.length;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          Text(
-            'Mi colección',
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${normalCollected + commCollected} de ${normalTotal + commTotal} monedas obtenidas',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-          ),
-          const SizedBox(height: 24),
-          _TypeButton(
-            label: 'Monedas Normales',
-            iconAsset: 'assets/icons/icon_normal.webp',
-            fallbackIcon: Icons.toll,
-            collected: normalCollected,
-            total: normalTotal,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const FilterScreen(isComm: false),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _TypeButton(
-            label: 'Monedas Conmemorativas',
-            iconAsset: 'assets/icons/icon_comm.webp',
-            fallbackIcon: Icons.star_outlined,
-            collected: commCollected,
-            total: commTotal,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const FilterScreen(isComm: true),
-              ),
-            ),
-          ),
-        ],
+    final normalButton = _TypeButton(
+      label: 'Monedas Normales',
+      iconAsset: 'assets/icons/icon_normal.webp',
+      fallbackIcon: Icons.toll,
+      collected: normalCollected,
+      total: normalTotal,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilterScreen(isComm: false),
+        ),
       ),
+    );
+
+    final commButton = _TypeButton(
+      label: 'Monedas Conmemorativas',
+      iconAsset: 'assets/icons/icon_comm.webp',
+      fallbackIcon: Icons.star_outlined,
+      collected: commCollected,
+      total: commTotal,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const FilterScreen(isComm: true),
+        ),
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final paddingV = layout.isShortHeight ? 16.0 : 24.0;
+        const paddingH = 24.0;
+
+        final split = layout.computeTwoPaneSplit(
+          constraints.maxWidth,
+          minLeftWidth: 230,
+          minRightWidth: 230,
+          fallbackLeftRatio: 0.5,
+          fallbackMaxLeft: 480,
+          fallbackGap: 16,
+          minCombinedWidth: 520,
+        );
+
+        final Widget buttonsSection;
+        if (split != null && split.alignedToHinge) {
+          final leftCardWidth = (split.leftWidth - paddingH).clamp(180.0, 480.0);
+          buttonsSection = IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: leftCardWidth, child: normalButton),
+                SizedBox(width: split.gapWidth),
+                Expanded(child: commButton),
+              ],
+            ),
+          );
+        } else if (split != null) {
+          buttonsSection = IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: normalButton),
+                const SizedBox(width: 16),
+                Expanded(child: commButton),
+              ],
+            ),
+          );
+        } else {
+          buttonsSection = Column(
+            children: [
+              normalButton,
+              const SizedBox(height: 16),
+              commButton,
+            ],
+          );
+        }
+
+        final content = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!layout.isShortHeight) const SizedBox(height: 8),
+            Text(
+              'Mi colección',
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${normalCollected + commCollected} de ${normalTotal + commTotal} monedas obtenidas',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+            ),
+            SizedBox(height: layout.isShortHeight ? 16 : 24),
+            buttonsSection,
+          ],
+        );
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: paddingH,
+            vertical: paddingV,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: split != null && split.alignedToHinge
+                    ? double.infinity
+                    : 960,
+              ),
+              child: content,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -187,64 +256,87 @@ class _TypeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final layout = AdaptiveLayout.of(context);
     final progress = total > 0 ? collected / total : 0.0;
-    // Icono adaptable: más pequeño en pantallas estrechas (pantalla dividida)
-    final iconSize = MediaQuery.of(context).size.shortestSide < 360 ? 56.0 : 84.0;
 
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Row(
-            children: [
-              Image.asset(
-                iconAsset,
-                width: iconSize,
-                height: iconSize,
-                errorBuilder: (_, _, _) =>
-                    Icon(fallbackIcon, size: iconSize, color: colorScheme.primary),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompactCard = constraints.maxWidth < 280;
+            final iconSize = layout.shortestSide < 360 || isCompactCard
+                ? 52.0
+                : (layout.isShortHeight ? 64.0 : 84.0);
+            final hPadding = isCompactCard ? 14.0 : 20.0;
+            final vPadding = layout.isShortHeight ? 16.0 : 20.0;
+
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: hPadding,
+                vertical: vPadding,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  Image.asset(
+                    iconAsset,
+                    width: iconSize,
+                    height: iconSize,
+                    errorBuilder: (_, _, _) => Icon(
+                      fallbackIcon,
+                      size: iconSize,
+                      color: colorScheme.primary,
                     ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 7,
-                        backgroundColor:
-                            isDark ? Colors.grey[700] : Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          progress == 1.0 ? Colors.green : colorScheme.primary,
+                  ),
+                  SizedBox(width: isCompactCard ? 12 : 16),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: isCompactCard ? 15 : 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 7,
+                            backgroundColor:
+                                isDark ? Colors.grey[700] : Colors.grey[300],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              progress == 1.0
+                                  ? Colors.green
+                                  : colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$collected / $total',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$collected / $total',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right,
+                    color: colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4)),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -263,7 +355,9 @@ class _ErrorView extends StatelessWidget {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: Column(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
@@ -315,6 +409,7 @@ class _ErrorView extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
