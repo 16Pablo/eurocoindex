@@ -18,13 +18,12 @@ enum DeviceType {
 
 /// Modo de diseño activo según el dispositivo, su postura y orientación.
 enum LayoutMode {
-  /// Modo teléfono clásico vertical: `NavigationBar` inferior, rejillas de
-  /// 2 columnas y flujo vertical de una sola columna.
-  phonePortrait,
+  /// Modo teléfono clásico: `NavigationBar` inferior y un solo panel,
+  /// incluso en horizontal o con un plegable cerrado.
+  phone,
 
-  /// Modo apaisado / tablet / plegable abierto: `NavigationRail` lateral,
-  /// rejillas adaptables al ancho y vistas multipanel o lado a lado.
-  expandedOrLandscape,
+  /// Modo tablet o plegable desplegado: `NavigationRail` y vistas multipanel.
+  expanded,
 }
 
 /// Métricas calculadas para dividir una pantalla en dos paneles respetando
@@ -109,6 +108,12 @@ class AdaptiveLayout {
   /// tamaño de tablet (`sw600dp` o superior según clasificación Android).
   bool get isTabletSize => shortestSide >= 600;
 
+  /// Los teléfonos conservan el diseño de un solo panel al girar. Un pliegue
+  /// vertical con espacio útil a ambos lados también identifica un plegable
+  /// desplegado aunque su ancho total no llegue al umbral de tablet.
+  bool get supportsExpandedLayout =>
+      isTabletSize || (verticalHinge != null && width >= 540);
+
   DeviceType get deviceType {
     if (isFoldable) return DeviceType.foldable;
     if (isTabletSize) return DeviceType.tablet;
@@ -117,23 +122,18 @@ class AdaptiveLayout {
 
   /// Determina cuándo usar `NavigationRail` lateral en lugar de `NavigationBar`.
   ///
-  /// Mantiene el modo teléfono clásico vertical en móviles verticales y en la
-  /// pantalla externa estrecha de un plegable cerrado; cambia a modo rail en
-  /// tablets (vertical u horizontal), plegables desplegados, ventanas amplias
-  /// de WSA y teléfonos girados en horizontal.
-  bool get useNavigationRail =>
-      width >= 600 ||
-      (isLandscape && width >= 480) ||
-      (verticalHinge != null && width >= 540);
+  /// El modo teléfono se mantiene también en horizontal y en la pantalla
+  /// externa de un plegable cerrado.
+  bool get useNavigationRail => supportsExpandedLayout;
 
   /// Rail expandido con icono + etiqueta en línea en tablets grandes o WSA.
   bool get useExtendedRail => width >= 1000;
 
   LayoutMode get layoutMode => useNavigationRail
-      ? LayoutMode.expandedOrLandscape
-      : LayoutMode.phonePortrait;
+      ? LayoutMode.expanded
+      : LayoutMode.phone;
 
-  bool get isClassicPhonePortrait => layoutMode == LayoutMode.phonePortrait;
+  bool get isClassicPhone => layoutMode == LayoutMode.phone;
 
   /// Calcula el número de columnas para las rejillas de países, valores, años
   /// y series manteniendo la proporción visual de las 2 columnas del teléfono
@@ -163,6 +163,7 @@ class AdaptiveLayout {
     double fallbackMaxLeft = 420,
     double fallbackGap = 1,
     double minCombinedWidth = 700,
+    bool allowOnPhoneLandscape = false,
   }) {
     final hinge = verticalHinge;
     if (hinge != null) {
@@ -184,6 +185,10 @@ class AdaptiveLayout {
           alignedToHinge: true,
         );
       }
+    }
+
+    if (!supportsExpandedLayout && !(allowOnPhoneLandscape && isLandscape)) {
+      return null;
     }
 
     if (localWidth < minCombinedWidth) return null;

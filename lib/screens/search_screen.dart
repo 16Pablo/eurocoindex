@@ -350,7 +350,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    final twoCols = constraints.maxWidth >= 680;
+                    final layout = AdaptiveLayout.of(context);
+                    final twoCols =
+                        layout.supportsExpandedLayout &&
+                        constraints.maxWidth >= 680;
                     if (!twoCols) {
                       return ListView.builder(
                         padding: const EdgeInsets.only(bottom: 16),
@@ -492,44 +495,44 @@ class _BottomFilterBar extends StatelessWidget {
         color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 4,
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 4,
               offset: const Offset(0, -2))
         ],
       ),
       child: Row(
         children: CollectionFilter.values
             .map((f) => Expanded(
-                  child: GestureDetector(
-                    onTap: () => onChanged(f),
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        border: filter == f
-                            ? Border(
-                                top: BorderSide(
-                                    color: colorScheme.primary,
-                                    width: 2))
-                            : null,
-                      ),
-                      child: Text(
-                        f == CollectionFilter.all
-                            ? 'Todas'
-                            : f == CollectionFilter.collected
-                                ? 'Obtenidas'
-                                : 'Faltantes',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: filter == f
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                child: GestureDetector(
+                  onTap: () => onChanged(f),
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: filter == f
+                          ? Border(
+                              top: BorderSide(
+                                  color: colorScheme.primary,
+                                  width: 2))
+                          : null,
+                    ),
+                    child: Text(
+                      f == CollectionFilter.all
+                          ? 'Todas'
+                          : f == CollectionFilter.collected
+                          ? 'Obtenidas'
+                          : 'Faltantes',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: filter == f
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                           color: filter == f
                               ? colorScheme.primary
                               : null,
-                        ),
                       ),
                     ),
                   ),
+                ),
                 ))
             .toList(),
       ),

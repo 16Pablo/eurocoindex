@@ -108,12 +108,12 @@ class CoinDetailBody extends StatelessWidget {
     // Monedas con la misma coincidencia (nivel más específico)
     final similar = coin.coincidencia != null
         ? provider.allCoins
-            .where((c) =>
-                c.coincidencia == coin.coincidencia &&
-                c.id != coin.id &&
-                c.emitida)
-            .take(10)
-            .toList()
+              .where((c) =>
+                    c.coincidencia == coin.coincidencia &&
+                    c.id != coin.id &&
+                    c.emitida)
+              .take(10)
+              .toList()
         : <Coin>[];
 
     // Monedas relacionadas: mismo subtag si existe, si no mismo tag
@@ -121,15 +121,15 @@ class CoinDetailBody extends StatelessWidget {
     final similarIds = similar.map((c) => c.id).toSet();
     final related = (coin.subtagES != null || coin.tagES != null)
         ? provider.allCoins
-            .where((c) =>
-                c.id != coin.id &&
-                c.emitida &&
-                !similarIds.contains(c.id) &&
-                (coin.subtagES != null
-                    ? c.subtagES == coin.subtagES
-                    : c.tagES == coin.tagES))
-            .take(10)
-            .toList()
+              .where((c) =>
+                    c.id != coin.id &&
+                    c.emitida &&
+                    !similarIds.contains(c.id) &&
+                    (coin.subtagES != null
+                        ? c.subtagES == coin.subtagES
+                        : c.tagES == coin.tagES))
+              .take(10)
+              .toList()
         : <Coin>[];
 
     return LayoutBuilder(
@@ -143,6 +143,7 @@ class CoinDetailBody extends StatelessWidget {
           fallbackMaxLeft: 440,
           fallbackGap: 24,
           minCombinedWidth: 640,
+          allowOnPhoneLandscape: true,
         );
 
         final detailsWidgets = <Widget>[
@@ -233,9 +234,9 @@ class CoinDetailBody extends StatelessWidget {
               '${coin.frase ?? ''} (${coin.rareza})'.trim(),
               onInfoTap: coin.hasNumericRarity
                   ? () => showDialog<void>(
-                        context: context,
-                        builder: (_) => _RarityInfoDialog(coin: coin),
-                      )
+                      context: context,
+                      builder: (_) => _RarityInfoDialog(coin: coin),
+                    )
                   : null,
             ),
           if (coin.conjOficial != null)
@@ -268,7 +269,7 @@ class CoinDetailBody extends StatelessWidget {
           ],
         ];
 
-        // ── Vista ancha de 2 columnas (tablet / apaisado / plegable) ─────
+        // ── Vista ancha: imagen junto a los detalles ─────────────────────
         if (split != null) {
           final boundedHeight = constraints.hasBoundedHeight
               ? constraints.maxHeight
@@ -571,17 +572,17 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-            letterSpacing: 0.5,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+        letterSpacing: 0.5,
+      ),
+    ),
+  );
 }
 
 class _DetailRow extends StatelessWidget {
@@ -827,8 +828,8 @@ class _RarityInfoDialog extends StatelessWidget {
                                     fontSize: 12.5,
                                     fontWeight:
                                         currentLabel == label.toLowerCase()
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     color: currentLabel == label.toLowerCase()
                                         ? colorScheme.onPrimaryContainer
                                         : colorScheme.onSurfaceVariant,
@@ -842,8 +843,8 @@ class _RarityInfoDialog extends StatelessWidget {
                                     fontSize: 12.5,
                                     fontWeight:
                                         currentLabel == label.toLowerCase()
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     color: currentLabel == label.toLowerCase()
                                         ? colorScheme.onPrimaryContainer
                                         : colorScheme.onSurfaceVariant,
