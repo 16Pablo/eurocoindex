@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../utils/adaptive_layout.dart';
+import '../widgets/eurocoindex_wordmark.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
@@ -101,7 +102,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildNavigationRail(BuildContext context, AdaptiveLayout layout) {
-    final colorScheme = Theme.of(context).colorScheme;
     final extended = layout.useExtendedRail;
 
     return NavigationRail(
@@ -122,36 +122,22 @@ class _MainScreenState extends State<MainScreen> {
                 16,
               ),
               child: extended
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: colorScheme.primaryContainer,
-                          child: Icon(
-                            Icons.euro_rounded,
-                            size: 20,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
+                  ? ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 224),
+                      child: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: EuroCoinDexWordmark(
+                          fontSize: 24,
+                          wordGap: 2.5,
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'EuroCoinDex',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    )
-                  : CircleAvatar(
-                      radius: 20,
-                      backgroundColor: colorScheme.primaryContainer,
-                      child: Icon(
-                        Icons.euro_rounded,
-                        color: colorScheme.onPrimaryContainer,
                       ),
+                    )
+                  : Image.asset(
+                      'assets/icons/icon.png',
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.contain,
                     ),
             ),
       onDestinationSelected: (i) {
