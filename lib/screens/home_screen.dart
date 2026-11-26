@@ -114,34 +114,6 @@ class _HomeContent extends StatelessWidget {
     final commCollected = provider.countCollected(provider.commCoins);
     final commTotal = provider.commCoins.length;
 
-    final normalButton = _TypeButton(
-      label: 'Monedas Normales',
-      iconAsset: 'assets/icons/icon_normal.webp',
-      fallbackIcon: Icons.toll,
-      collected: normalCollected,
-      total: normalTotal,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilterScreen(isComm: false),
-        ),
-      ),
-    );
-
-    final commButton = _TypeButton(
-      label: 'Monedas Conmemorativas',
-      iconAsset: 'assets/icons/icon_comm.webp',
-      fallbackIcon: Icons.star_outlined,
-      collected: commCollected,
-      total: commTotal,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const FilterScreen(isComm: true),
-        ),
-      ),
-    );
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final paddingV = layout.isShortHeight ? 16.0 : 24.0;
@@ -154,17 +126,69 @@ class _HomeContent extends StatelessWidget {
           fallbackLeftRatio: 0.5,
           fallbackMaxLeft: 480,
           fallbackGap: 16,
-          minCombinedWidth: 520,
+          minCombinedWidth: 560,
+        );
+
+        final hingeLeftWidth = (split != null && split.alignedToHinge)
+            ? (split.leftWidth - paddingH).clamp(180.0, 480.0)
+            : 0.0;
+
+        final bool compactLeft;
+        final bool compactRight;
+        if (split != null && split.alignedToHinge) {
+          final rightCardWidth =
+              constraints.maxWidth - paddingH * 2 - hingeLeftWidth - split.gapWidth;
+          compactLeft = hingeLeftWidth < 290;
+          compactRight = rightCardWidth < 290;
+        } else if (split != null) {
+          final containerWidth =
+              constraints.maxWidth > 960 ? 960.0 : constraints.maxWidth;
+          final eachCardWidth = (containerWidth - paddingH * 2 - 16) / 2;
+          compactLeft = eachCardWidth < 290;
+          compactRight = eachCardWidth < 290;
+        } else {
+          final singleWidth = constraints.maxWidth - paddingH * 2;
+          compactLeft = singleWidth < 290;
+          compactRight = singleWidth < 290;
+        }
+
+        final normalButton = _TypeButton(
+          label: 'Monedas Normales',
+          iconAsset: 'assets/icons/icon_normal.webp',
+          fallbackIcon: Icons.toll,
+          collected: normalCollected,
+          total: normalTotal,
+          isCompactCard: compactLeft,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const FilterScreen(isComm: false),
+            ),
+          ),
+        );
+
+        final commButton = _TypeButton(
+          label: 'Monedas Conmemorativas',
+          iconAsset: 'assets/icons/icon_comm.webp',
+          fallbackIcon: Icons.star_outlined,
+          collected: commCollected,
+          total: commTotal,
+          isCompactCard: compactRight,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const FilterScreen(isComm: true),
+            ),
+          ),
         );
 
         final Widget buttonsSection;
         if (split != null && split.alignedToHinge) {
-          final leftCardWidth = (split.leftWidth - paddingH).clamp(180.0, 480.0);
           buttonsSection = IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(width: leftCardWidth, child: normalButton),
+                SizedBox(width: hingeLeftWidth, child: normalButton),
                 SizedBox(width: split.gapWidth),
                 Expanded(child: commButton),
               ],
@@ -242,6 +266,7 @@ class _TypeButton extends StatelessWidget {
   final int collected;
   final int total;
   final VoidCallback onTap;
+  final bool isCompactCard;
 
   const _TypeButton({
     required this.label,
@@ -250,6 +275,7 @@ class _TypeButton extends StatelessWidget {
     required this.collected,
     required this.total,
     required this.onTap,
+    this.isCompactCard = false,
   });
 
   @override
@@ -259,84 +285,78 @@ class _TypeButton extends StatelessWidget {
     final layout = AdaptiveLayout.of(context);
     final progress = total > 0 ? collected / total : 0.0;
 
+    final iconSize = layout.shortestSide < 360 || isCompactCard
+        ? 48.0
+        : (layout.isShortHeight ? 64.0 : 84.0);
+    final hPadding = isCompactCard ? 12.0 : 20.0;
+    final vPadding = layout.isShortHeight ? 16.0 : 20.0;
+
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         onTap: onTap,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isCompactCard = constraints.maxWidth < 280;
-            final iconSize = layout.shortestSide < 360 || isCompactCard
-                ? 52.0
-                : (layout.isShortHeight ? 64.0 : 84.0);
-            final hPadding = isCompactCard ? 14.0 : 20.0;
-            final vPadding = layout.isShortHeight ? 16.0 : 20.0;
-
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: hPadding,
-                vertical: vPadding,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: hPadding,
+            vertical: vPadding,
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                iconAsset,
+                width: iconSize,
+                height: iconSize,
+                errorBuilder: (_, _, _) => Icon(
+                  fallbackIcon,
+                  size: iconSize,
+                  color: colorScheme.primary,
+                ),
               ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    iconAsset,
-                    width: iconSize,
-                    height: iconSize,
-                    errorBuilder: (_, _, _) => Icon(
-                      fallbackIcon,
-                      size: iconSize,
-                      color: colorScheme.primary,
+              SizedBox(width: isCompactCard ? 10 : 16),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: isCompactCard ? 15 : 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: isCompactCard ? 12 : 16),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: isCompactCard ? 15 : 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 7,
+                        backgroundColor:
+                            isDark ? Colors.grey[700] : Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress == 1.0 ? Colors.green : colorScheme.primary,
                         ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 7,
-                            backgroundColor:
-                                isDark ? Colors.grey[700] : Colors.grey[300],
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              progress == 1.0
-                                  ? Colors.green
-                                  : colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$collected / $total',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right,
-                    color: colorScheme.onSurface.withValues(alpha: 0.4),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      '$collected / $total',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+              SizedBox(width: isCompactCard ? 4 : 8),
+              Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
         ),
       ),
     );
