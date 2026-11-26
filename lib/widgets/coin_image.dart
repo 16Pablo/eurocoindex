@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -7,7 +8,7 @@ import '../services/app_cache_manager.dart';
 
 enum CoinImageType { coin, flag, value, yearIcon }
 
-class CoinImage extends StatelessWidget {
+class CoinImage extends StatefulWidget {
   final String? filename;
   final CoinImageType type;
   final double? width;
@@ -40,50 +41,108 @@ class CoinImage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final url = _url;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  State<CoinImage> createState() => _CoinImageState();
+}
 
-    Widget placeholder = Shimmer.fromColors(
+class _CoinImageState extends State<CoinImage> {
+  Future<FileInfo?>? _cachedFile;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCache(widget._url);
+  }
+
+  @override
+  void didUpdateWidget(CoinImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget._url != oldWidget._url) {
+      _checkCache(widget._url);
+    }
+  }
+
+  void _checkCache(String? url) {
+    _cachedFile = url == null
+        ? null
+        : AppCacheManager.instance.getFileFromCache(url);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final url = widget._url;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final width = widget.width;
+    final height = widget.height;
+
+    final shimmerPlaceholder = Shimmer.fromColors(
       baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
       highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-      child: Container(
-        width: width,
-        height: height,
-        color: Colors.white,
-      ),
+      child: Container(width: width, height: height, color: Colors.white),
     );
 
-    Widget errorWidget = Container(
+    final staticPlaceholder = Container(
+      width: width,
+      height: height,
+      color: isDark ? Colors.grey[800] : Colors.grey[300],
+    );
+
+    final errorWidget = Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[800] : Colors.grey[200],
-        borderRadius: borderRadius,
+        borderRadius: widget.borderRadius,
       ),
       child: Icon(
-        type == CoinImageType.flag ? Icons.flag : Icons.euro,
+        widget.type == CoinImageType.flag ? Icons.flag : Icons.euro,
         color: isDark ? Colors.grey[600] : Colors.grey[400],
         size: (width ?? 40) * 0.5,
       ),
     );
 
     if (url == null) return errorWidget;
-    
-    Widget img = CachedNetworkImage(
-      imageUrl: url,
-      cacheManager: AppCacheManager.instance,
-      width: width,
-      height: height,
-      fit: fit,
-      placeholder: (_, _) => placeholder,
-      errorWidget: (_, _, _) => errorWidget,
+
+    Widget image = FutureBuilder<FileInfo?>(
+      future: _cachedFile,
+      builder: (context, snapshot) {
+        final cachedFile = snapshot.data;
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return staticPlaceholder;
+        }
+
+        if (cachedFile != null &&
+            cachedFile.validTill.isAfter(DateTime.now())) {
+          return Image.file(
+            cachedFile.file,
+            width: width,
+            height: height,
+            fit: widget.fit,
+            errorBuilder: (_, _, _) => errorWidget,
+          );
+        }
+
+        final hasConfirmedMiss =
+            snapshot.connectionState == ConnectionState.done &&
+            !snapshot.hasError &&
+            cachedFile == null;
+
+        return CachedNetworkImage(
+          imageUrl: url,
+          cacheManager: AppCacheManager.instance,
+          width: width,
+          height: height,
+          fit: widget.fit,
+          placeholder: (_, _) =>
+              hasConfirmedMiss ? shimmerPlaceholder : staticPlaceholder,
+          errorWidget: (_, _, _) => errorWidget,
+        );
+      },
     );
 
-    if (borderRadius != null) {
-      img = ClipRRect(borderRadius: borderRadius!, child: img);
+    if (widget.borderRadius != null) {
+      image = ClipRRect(borderRadius: widget.borderRadius!, child: image);
     }
 
-    return img;
+    return image;
   }
 }

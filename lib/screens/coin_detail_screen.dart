@@ -762,13 +762,13 @@ class _RarityInfoDialog extends StatelessWidget {
                 style: bodyStyle,
               ),
               const SizedBox(height: 14),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colorScheme.outlineVariant),
-                    borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
-                  ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: colorScheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.fieldRadius - 1),
                   child: Column(
                     children: [
                       Container(
@@ -779,80 +779,58 @@ class _RarityInfoDialog extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                'Porcentaje',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
+                            for (final heading in const ['Porcentaje', 'Rareza'])
+                              Expanded(
+                                child: Text(
+                                  heading,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'Rareza',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),
                       for (final (range, label) in _ranges)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: currentLabel == label.toLowerCase()
-                                ? colorScheme.primaryContainer
-                                    .withValues(alpha: 0.65)
-                                : null,
-                            border: Border(
-                              top: BorderSide(
-                                color: colorScheme.outlineVariant,
-                              ),
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  range,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight:
-                                        currentLabel == label.toLowerCase()
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: currentLabel == label.toLowerCase()
-                                        ? colorScheme.onPrimaryContainer
-                                        : colorScheme.onSurfaceVariant,
+                        Builder(
+                          builder: (_) {
+                            final isCurrent =
+                                currentLabel == label.toLowerCase();
+                            final cellStyle = TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isCurrent
+                                  ? colorScheme.onPrimaryContainer
+                                  : colorScheme.onSurfaceVariant,
+                            );
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: isCurrent
+                                    ? colorScheme.primaryContainer
+                                        .withValues(alpha: 0.65)
+                                    : null,
+                                border: Border(
+                                  top: BorderSide(
+                                    color: colorScheme.outlineVariant,
                                   ),
                                 ),
                               ),
-                              Expanded(
-                                child: Text(
-                                  label,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight:
-                                        currentLabel == label.toLowerCase()
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: currentLabel == label.toLowerCase()
-                                        ? colorScheme.onPrimaryContainer
-                                        : colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
                               ),
-                            ],
-                          ),
+                              child: Row(
+                                children: [
+                                  Expanded(child: Text(range, style: cellStyle)),
+                                  Expanded(child: Text(label, style: cellStyle)),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                     ],
                   ),
