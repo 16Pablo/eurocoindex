@@ -138,6 +138,25 @@ class Coin {
   /// Clave de ordenación: DateSort si existe, si no aaaa/12/31 del anoinicio
   String get sortKey => dateSort ?? '$anoInicio/12/31';
 
+  static const Set<String> _numericRarityLabels = {
+    'muy común',
+    'común',
+    'intermedia',
+    'rara',
+    'muy rara',
+  };
+
+  /// Verdadero si la moneda tiene una rareza numérica válida
+  /// (Muy común, Común, Intermedia, Rara o Muy rara).
+  bool get hasNumericRarity {
+    if (rareza == null || !RegExp(r'\d').hasMatch(rareza!)) return false;
+    final label = frase?.trim().toLowerCase();
+    if (label != null && !_numericRarityLabels.contains(label)) {
+      return false;
+    }
+    return true;
+  }
+
   /// Verdadero si la moneda fue emitida en el año dado
   bool issuedInYear(int year) {
     if (year < anoInicio) return false;

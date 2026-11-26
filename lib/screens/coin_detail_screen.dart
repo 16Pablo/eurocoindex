@@ -228,7 +228,16 @@ class CoinDetailBody extends StatelessWidget {
           if (coin.coincidencia != null)
             _DetailRow('Coincidencia', coin.coincidencia!),
           if (coin.rareza != null)
-            _DetailRow('Rareza', '${coin.frase ?? ''} (${coin.rareza})'),
+            _DetailRow(
+              'Rareza',
+              '${coin.frase ?? ''} (${coin.rareza})'.trim(),
+              onInfoTap: coin.hasNumericRarity
+                  ? () => showDialog<void>(
+                        context: context,
+                        builder: (_) => _RarityInfoDialog(coin: coin),
+                      )
+                  : null,
+            ),
           if (coin.conjOficial != null)
             _DetailRow('Serie conjunta', coin.conjOficial!),
 
@@ -578,11 +587,18 @@ class _SectionTitle extends StatelessWidget {
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  const _DetailRow(this.label, this.value);
+  final VoidCallback? onInfoTap;
+
+  const _DetailRow(this.label, this.value, {this.onInfoTap});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final valueText = Text(
+      value,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
@@ -599,12 +615,258 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w500)),
+            child: onInfoTap == null
+                ? valueText
+                : InkWell(
+                    onTap: onInfoTap,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: valueText),
+                        const SizedBox(width: 6),
+                        Tooltip(
+                          message: '¿Qué significa la rareza?',
+                          child: Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Cuadro explicativo del cálculo y escala de rareza para una moneda.
+class _RarityInfoDialog extends StatelessWidget {
+  final Coin coin;
+
+  const _RarityInfoDialog({required this.coin});
+
+  static const List<(String, String)> _ranges = [
+    ('0 % – 19 %', 'Muy común'),
+    ('20 % – 39 %', 'Común'),
+    ('40 % – 59 %', 'Intermedia'),
+    ('60 % – 79 %', 'Rara'),
+    ('80 % – 100 %', 'Muy rara'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final bodyStyle = TextStyle(
+      fontSize: 13.5,
+      height: 1.45,
+      color: colorScheme.onSurfaceVariant,
+    );
+    final currentLabel = coin.frase?.trim().toLowerCase();
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.info_outline, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              '¿Qué significa la rareza?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.bar_chart_rounded,
+                      color: colorScheme.onPrimaryContainer,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        coin.frase ?? 'Rareza',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        coin.rareza ?? '',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'La rareza indica cuántas monedas de ese tipo se acuñaron en comparación con el resto del catálogo. Se calcula a partir de la tirada total de la moneda, sumando sus versiones de circulación y de colección (FDC y proof).',
+                style: bodyStyle,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'El porcentaje va de 0 % a 100 %:\n'
+                '· 0 % corresponde a la moneda con la mayor tirada del catálogo.\n'
+                '· 100 % corresponde a la moneda con la menor tirada.',
+                style: bodyStyle,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Cuanto más alto es el porcentaje, menos ejemplares existen y más difícil será encontrarla.',
+                style: bodyStyle,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'La escala no es lineal. Pasar de 1 millón a 100.000 ejemplares sube la rareza lo mismo que pasar de 100.000 a 10.000. Así, las diferencias entre monedas poco acuñadas se aprecian igual de bien que entre las muy acuñadas.',
+                style: bodyStyle,
+              ),
+              const SizedBox(height: 14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colorScheme.outlineVariant),
+                    borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Porcentaje',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                'Rareza',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      for (final (range, label) in _ranges)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: currentLabel == label.toLowerCase()
+                                ? colorScheme.primaryContainer
+                                    .withValues(alpha: 0.65)
+                                : null,
+                            border: Border(
+                              top: BorderSide(
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  range,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight:
+                                        currentLabel == label.toLowerCase()
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color: currentLabel == label.toLowerCase()
+                                        ? colorScheme.onPrimaryContainer
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight:
+                                        currentLabel == label.toLowerCase()
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                    color: currentLabel == label.toLowerCase()
+                                        ? colorScheme.onPrimaryContainer
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Entendido'),
+        ),
+      ],
     );
   }
 }
