@@ -16,12 +16,19 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  final _textController = TextEditingController();
   int? _selectedValor;
   String? _selectedPais;
   int? _selectedYear;
   String? _selectedTag;
   List<Coin>? _results;
   CollectionFilter _filter = CollectionFilter.all;
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +144,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          _FreeTextSearchField(
+                            controller: _textController,
+                            onSubmitted: (_) => _doSearch(),
+                          ),
+                          const SizedBox(height: 10),
                           _DropdownField<int>(
                             label: 'Valor',
                             value: _selectedValor,
@@ -211,6 +223,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Column(
                   children: [
+                    _FreeTextSearchField(
+                      controller: _textController,
+                      onSubmitted: (_) => _doSearch(),
+                    ),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -432,6 +449,7 @@ class _SearchScreenState extends State<SearchScreen> {
       idPais: _selectedPais,
       year: _selectedYear,
       tag: _selectedTag,
+      text: _textController.text,
     );
     setState(() {
       _results = results;
@@ -445,9 +463,35 @@ class _SearchScreenState extends State<SearchScreen> {
       _selectedPais = null;
       _selectedYear = null;
       _selectedTag = null;
+      _textController.clear();
       _results = null;
       _filter = CollectionFilter.all;
     });
+  }
+}
+
+class _FreeTextSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
+
+  const _FreeTextSearchField({
+    required this.controller,
+    required this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      textInputAction: TextInputAction.search,
+      onSubmitted: onSubmitted,
+      decoration: const InputDecoration(
+        labelText: 'Búsqueda por texto',
+        hintText: 'Título, descripción, motivo, tema o país',
+        prefixIcon: Icon(Icons.search),
+        isDense: true,
+      ),
+    );
   }
 }
 

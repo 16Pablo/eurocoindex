@@ -175,7 +175,14 @@ class AppProvider extends ChangeNotifier {
 
   // ── Búsqueda ──────────────────────────────────────────────────────────────
 
-  List<Coin> search({int? valor, String? idPais, int? year, String? tag}) {
+  List<Coin> search({
+    int? valor,
+    String? idPais,
+    int? year,
+    String? tag,
+    String? text,
+  }) {
+    final query = text?.trim().toLowerCase();
     return _allCoins.where((c) {
       if (!c.emitida) return false;
       if (valor != null && c.valor != valor) return false;
@@ -186,6 +193,13 @@ class AppProvider extends ChangeNotifier {
           c.tagES != tag &&
           c.subtagES != tag &&
           c.coincidencia != tag) {
+        return false;
+      }
+      if (query != null &&
+          query.isNotEmpty &&
+          ![c.titulo, c.descrCoinES, c.motivoES, c.tagES, c.paisES]
+              .whereType<String>()
+              .any((value) => value.toLowerCase().contains(query))) {
         return false;
       }
       return true;
