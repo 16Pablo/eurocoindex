@@ -23,6 +23,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String? _selectedTag;
   List<Coin>? _results;
   CollectionFilter _filter = CollectionFilter.all;
+  bool _isSearching = false;
 
   @override
   void dispose() {
@@ -146,6 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         children: [
                           _FreeTextSearchField(
                             controller: _textController,
+                            enabled: !_isSearching,
                             onSubmitted: (_) => _doSearch(),
                           ),
                           const SizedBox(height: 10),
@@ -153,42 +155,46 @@ class _SearchScreenState extends State<SearchScreen> {
                             label: 'Valor',
                             value: _selectedValor,
                             items: valorItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedValor = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedValor = v),
                           ),
                           const SizedBox(height: 10),
                           _DropdownField<String>(
                             label: 'País',
                             value: _selectedPais,
                             items: paisItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedPais = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedPais = v),
                           ),
                           const SizedBox(height: 10),
                           _DropdownField<int>(
                             label: 'Año',
                             value: _selectedYear,
                             items: yearItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedYear = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedYear = v),
                           ),
                           const SizedBox(height: 10),
                           _DropdownField<String>(
                             label: 'Tema',
                             value: _selectedTag,
                             items: tagItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedTag = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedTag = v),
                           ),
                           const SizedBox(height: 14),
                           FilledButton.icon(
-                            onPressed: _doSearch,
+                            onPressed: _isSearching ? null : _doSearch,
                             icon: const Icon(Icons.search),
                             label: const Text('Buscar'),
                           ),
                           const SizedBox(height: 8),
                           OutlinedButton(
-                            onPressed: _clearSearch,
+                            onPressed: _isSearching ? null : _clearSearch,
                             child: const Text('Limpiar'),
                           ),
                         ],
@@ -225,6 +231,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   children: [
                     _FreeTextSearchField(
                       controller: _textController,
+                      enabled: !_isSearching,
                       onSubmitted: (_) => _doSearch(),
                     ),
                     const SizedBox(height: 10),
@@ -235,8 +242,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             label: 'Valor',
                             value: _selectedValor,
                             items: valorItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedValor = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedValor = v),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -245,8 +253,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             label: 'País',
                             value: _selectedPais,
                             items: paisItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedPais = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedPais = v),
                           ),
                         ),
                       ],
@@ -259,8 +268,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             label: 'Año',
                             value: _selectedYear,
                             items: yearItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedYear = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedYear = v),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -269,8 +279,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             label: 'Tema',
                             value: _selectedTag,
                             items: tagItems,
-                            onChanged: (v) =>
-                                setState(() => _selectedTag = v),
+                            onChanged: _isSearching
+                                ? null
+                                : (v) => setState(() => _selectedTag = v),
                           ),
                         ),
                       ],
@@ -280,14 +291,14 @@ class _SearchScreenState extends State<SearchScreen> {
                       children: [
                         Expanded(
                           child: FilledButton.icon(
-                            onPressed: _doSearch,
+                            onPressed: _isSearching ? null : _doSearch,
                             icon: const Icon(Icons.search),
                             label: const Text('Buscar'),
                           ),
                         ),
                         const SizedBox(width: 10),
                         OutlinedButton(
-                          onPressed: _clearSearch,
+                          onPressed: _isSearching ? null : _clearSearch,
                           child: const Text('Limpiar'),
                         ),
                       ],
@@ -316,6 +327,19 @@ class _SearchScreenState extends State<SearchScreen> {
     List<Coin>? displayed, {
     required bool showInlineBottomFilter,
   }) {
+    if (_isSearching) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 12),
+            Text('Buscando monedas...'),
+          ],
+        ),
+      );
+    }
+
     if (_results == null) {
       return const Center(
         child: Padding(
@@ -442,19 +466,44 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  void _doSearch() {
+  Future<void> _doSearch() async {
+    if (_isSearching) return;
+
     final provider = context.read<AppProvider>();
-    final results = provider.search(
-      valor: _selectedValor,
-      idPais: _selectedPais,
-      year: _selectedYear,
-      tag: _selectedTag,
-      text: _textController.text,
-    );
-    setState(() {
-      _results = results;
-      _filter = CollectionFilter.all;
-    });
+    setState(() => _isSearching = true);
+    try {
+      final results = await provider.search(
+        valor: _selectedValor,
+        idPais: _selectedPais,
+        year: _selectedYear,
+        tag: _selectedTag,
+        text: _textController.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _results = results;
+        _filter = CollectionFilter.all;
+        _isSearching = false;
+      });
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'coin search',
+          context: ErrorDescription('while searching the coin catalog'),
+        ),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo completar la búsqueda.')),
+        );
+      }
+    } finally {
+      if (mounted && _isSearching) {
+        setState(() => _isSearching = false);
+      }
+    }
   }
 
   void _clearSearch() {
@@ -472,10 +521,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
 class _FreeTextSearchField extends StatelessWidget {
   final TextEditingController controller;
+  final bool enabled;
   final ValueChanged<String> onSubmitted;
 
   const _FreeTextSearchField({
     required this.controller,
+    required this.enabled,
     required this.onSubmitted,
   });
 
@@ -483,6 +534,7 @@ class _FreeTextSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      enabled: enabled,
       textInputAction: TextInputAction.search,
       onSubmitted: onSubmitted,
       decoration: const InputDecoration(
@@ -499,7 +551,7 @@ class _DropdownField<T> extends StatelessWidget {
   final String label;
   final T? value;
   final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
+  final ValueChanged<T?>? onChanged;
 
   const _DropdownField({
     required this.label,

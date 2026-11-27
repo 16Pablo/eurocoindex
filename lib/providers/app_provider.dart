@@ -175,46 +175,25 @@ class AppProvider extends ChangeNotifier {
 
   // ── Búsqueda ──────────────────────────────────────────────────────────────
 
-  List<Coin> search({
+  Future<List<Coin>> search({
     int? valor,
     String? idPais,
     int? year,
     String? tag,
     String? text,
   }) {
-    final query = text?.trim().toLowerCase();
-    return _allCoins.where((c) {
-      if (!c.emitida) return false;
-      if (valor != null && c.valor != valor) return false;
-      if (idPais != null && c.idPais != idPais) return false;
-      if (year != null && !c.issuedInYear(year)) return false;
-      // El filtro de tag busca en tag, subtag y coincidencia
-      if (tag != null &&
-          c.tagES != tag &&
-          c.subtagES != tag &&
-          c.coincidencia != tag) {
-        return false;
-      }
-      if (query != null &&
-          query.isNotEmpty &&
-          ![c.titulo, c.descrCoinES, c.motivoES, c.tagES, c.paisES]
-              .whereType<String>()
-              .any((value) => value.toLowerCase().contains(query))) {
-        return false;
-      }
-      return true;
-    }).toList()
-      ..sort((a, b) {
-        final valorCmp = b.valor.compareTo(a.valor);
-        if (valorCmp != 0) return valorCmp;
-        final anoCmp = a.anoInicio.compareTo(b.anoInicio);
-        if (anoCmp != 0) return anoCmp;
-        final dateCmp = a.sortKey.compareTo(b.sortKey);
-        if (dateCmp != 0) return dateCmp;
-        final titleA = a.titulo ?? a.descrSerieES ?? '';
-        final titleB = b.titulo ?? b.descrSerieES ?? '';
-        return titleA.compareTo(titleB);
-      });
+    return compute(
+      _searchCoins,
+      _CoinSearchRequest(
+        coins: _allCoins,
+        valor: valor,
+        idPais: idPais,
+        year: year,
+        tag: tag,
+        query: text?.trim().toLowerCase(),
+      ),
+      debugLabel: 'search coins',
+    );
   }
 
   List<String> get allTags {
@@ -329,4 +308,57 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> setCheckUpdatesOnStart(bool value) =>
       _coinsService.setCheckUpdatesOnStartPref(value);
+}
+
+class _CoinSearchRequest {
+  final List<Coin> coins;
+  final int? valor;
+  final String? idPais;
+  final int? year;
+  final String? tag;
+  final String? query;
+
+  const _CoinSearchRequest({
+    required this.coins,
+    required this.valor,
+    required this.idPais,
+    required this.year,
+    required this.tag,
+    required this.query,
+  });
+}
+
+List<Coin> _searchCoins(_CoinSearchRequest request) {
+  return request.coins.where((c) {
+    if (!c.emitida) return false;
+    if (request.valor != null && c.valor != request.valor) return false;
+    if (request.idPais != null && c.idPais != request.idPais) return false;
+    if (request.year != null && !c.issuedInYear(request.year!)) return false;
+    if (request.tag != null &&
+        c.tagES != request.tag &&
+        c.subtagES != request.tag &&
+        c.coincidencia != request.tag) {
+      return false;
+    }
+    final query = request.query;
+    if (query != null &&
+        query.isNotEmpty &&
+        ![c.titulo, c.descrCoinES, c.motivoES, c.tagES, c.paisES]
+            .whereType<String>()
+            .any((value) => value.toLowerCase().contains(query))) {
+      return false;
+    }
+    return true;
+  }).toList()
+    ..sort((a, b) {
+      final valorCmp = b.valor.compareTo(a.valor);
+      if (valorCmp != 0) return valorCmp;
+      final anoCmp = a.anoInicio.compareTo(b.anoInicio);
+      if (anoCmp != 0) return anoCmp;
+      final dateCmp = a.sortKey.compareTo(b.sortKey);
+      if (dateCmp != 0) return dateCmp;
+      final titleA = a.titulo ?? a.descrSerieES ?? '';
+      final titleB = b.titulo ?? b.descrSerieES ?? '';
+      return titleA.compareTo(titleB);
+    });
 }
