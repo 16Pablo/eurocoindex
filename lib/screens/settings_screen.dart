@@ -43,59 +43,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AppProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final totalCoins = provider.allCoins.where((c) => c.emitida).length;
-    final collected = provider.collectedIds.length;
+    final provider = context.read<AppProvider>();
     final layout = AdaptiveLayout.of(context);
-
-    final statsAndAbout = <Widget>[
-      const _SectionHeader('Mi colección'),
-      Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _StatItem(
-                      'Obtenidas', '$collected', colorScheme.primary),
-                  _StatItem('Faltantes',
-                      '${totalCoins - collected}', Colors.grey),
-                  _StatItem('Total catálogo', '$totalCoins',
-                      colorScheme.secondary),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: totalCoins > 0 ? collected / totalCoins : 0,
-                  minHeight: 10,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    collected == totalCoins
-                        ? Colors.green
-                        : colorScheme.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                totalCoins > 0
-                    ? '${(collected / totalCoins * 100).toStringAsFixed(1)}% completado'
-                    : '',
-                style:
-                    const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ];
 
     final backupAndDb = <Widget>[
       const _SectionHeader('Copia de seguridad'),
@@ -189,7 +138,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.only(bottom: 32),
                     children: [
-                      ...statsAndAbout,
                       ...about,
                     ],
                   ),
@@ -219,7 +167,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               constraints: const BoxConstraints(maxWidth: 680),
               child: ListView(
                 children: [
-                  ...statsAndAbout,
                   ...backupAndDb,
                   ...about,
                   const SizedBox(height: 32),
@@ -334,10 +281,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ── Widgets auxiliares ─────────────────────────────────────────────────────
-
 class _SectionHeader extends StatelessWidget {
   final String text;
+
   const _SectionHeader(this.text);
 
   @override
@@ -352,28 +298,5 @@ class _SectionHeader extends StatelessWidget {
             letterSpacing: 1.2,
           ),
         ),
-      );
-}
-
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  const _StatItem(this.label, this.value, this.color);
-
-  @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color),
-          ),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 11, color: Colors.grey)),
-        ],
       );
 }

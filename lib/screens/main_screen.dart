@@ -5,6 +5,7 @@ import '../widgets/eurocoindex_wordmark.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
+import 'statistics_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     SearchScreen(),
+    StatisticsScreen(),
     SettingsScreen(),
   ];
 
@@ -93,6 +95,11 @@ class _MainScreenState extends State<MainScreen> {
           label: 'Buscar',
         ),
         NavigationDestination(
+          icon: Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart),
+          label: 'Estadísticas',
+        ),
+        NavigationDestination(
           icon: Icon(Icons.settings_outlined),
           selectedIcon: Icon(Icons.settings),
           label: 'Ajustes',
@@ -155,6 +162,11 @@ class _MainScreenState extends State<MainScreen> {
           icon: Icon(Icons.search_outlined),
           selectedIcon: Icon(Icons.search),
           label: Text('Buscar'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart),
+          label: Text('Estadísticas'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.settings_outlined),
